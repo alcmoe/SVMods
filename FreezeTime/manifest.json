@@ -1,0 +1,10 @@
+{
+  "Name": "FreezeTime",
+  "Author": "mori_sensei",
+  "Version": "1.0.0",
+  "Description": "Freeze Time in multiplayer",
+  "UniqueID": "mori_sensei.FreezeTime",
+  "EntryDll": "FreezeTime.dll",
+  "MinimumApiVersion": "3.18",
+  "UpdateKeys": []
+}
