@@ -5,6 +5,12 @@
   "Description": "Freeze Time in multiplayer",
   "UniqueID": "mori_sensei.FreezeTime",
   "EntryDll": "FreezeTime.dll",
-  "MinimumApiVersion": "3.18",
-  "UpdateKeys": []
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [ "Nexus:21820" ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
 }
