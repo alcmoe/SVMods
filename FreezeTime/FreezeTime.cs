@@ -1,6 +1,4 @@
-﻿
-using Force.DeepCloner;
-using HarmonyLib;
+﻿using HarmonyLib;
 using StardewModdingAPI;
 using StardewValley;
 using Microsoft.Xna.Framework;
@@ -17,6 +15,7 @@ public partial class FreezeTime: Mod
 
     private FreezeTimeChecker _checker = new(new ModConfig());
     private static bool _lastFreezeStatus;
+    private static bool _forcePassTime;
     private static readonly Vector2 FramePosition = new(44, 240);
     private static Dictionary<int, int> _npcHealth = [];
     public override void Entry(IModHelper helper)
@@ -44,6 +43,14 @@ public partial class FreezeTime: Mod
         harmony.Patch(
             original: AccessTools.Method(typeof(Game1), "Update"),
             postfix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.ForceNetTimePause))
+        );        
+        harmony.Patch(
+            original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.performTouchAction), [typeof(string[]), typeof(Vector2)]),
+            prefix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.PerformSleepCheck))
+        );        
+        harmony.Patch(
+            original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.performTouchAction), [typeof(string[]), typeof(Vector2)]),
+            postfix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.PerformSleepChecked))
         );
     }
 
@@ -51,10 +58,14 @@ public partial class FreezeTime: Mod
     {
         public static bool ShouldTimePass(ref bool __result)
         {
-            if (!Context.IsMainPlayer) {
+            if (!Context.IsMultiplayer) {
                 return true;
             }
-            if (!Context.IsMultiplayer) {
+            if (_lastFreezeStatus && _forcePassTime) {
+                __result = true;
+                return false;
+            }
+            if (!Context.IsMainPlayer) {
                 return true;
             }
             __result = !_lastFreezeStatus;
@@ -65,6 +76,15 @@ public partial class FreezeTime: Mod
             if (Context.IsMainPlayer && Context.IsMultiplayer) {
                 Game1.netWorldState.Value.IsTimePaused = _lastFreezeStatus;
             }
+        }
+        public static void PerformSleepCheck()
+        {
+            _forcePassTime = true;
+        }        
+        
+        public static void PerformSleepChecked()
+        {
+            _forcePassTime = false;
         }
     }
 
@@ -108,7 +128,9 @@ public partial class FreezeTime: Mod
     
     private void PreRenderHudEvent(object? sender, EventArgs e)
     {
-        DrawStatusBar();
+        if (Game1.displayHUD) {
+            DrawStatusBar();
+        }
     }
     
     private void ButtonReleasedEvent(object? sender, StardewModdingAPI.Events.ButtonReleasedEventArgs e)
@@ -120,13 +142,14 @@ public partial class FreezeTime: Mod
         if (!new Rectangle((int)((Game1.dayTimeMoneyBox.position.X + FramePosition.X + 24) * Game1.options.uiScale),(int)((Game1.dayTimeMoneyBox.position.Y + FramePosition.Y + 24) * Game1.options.uiScale),(int)(108 * Game1.options.uiScale), (int)(24 * Game1.options.uiScale)).Contains(Game1.getMouseX(), Game1.getMouseY())) { 
             return;
         }
+
+        _lastFreezeStatus = !_lastFreezeStatus;
         Game1.chatBox.addMessage(_checker.GetFreezeTimeMessage(), Color.Aqua);
         Helper.Input.Suppress(SButton.MouseLeft);
     }
     
     private static bool PlayerFrozen(Farmer player)
     {
-        // return player is { CanMove: false, UsingTool: false } || player.hasMenuOpen.Value || player.Sprite.currentFrame == 84;
         return player is { CanMove: false, UsingTool: false } || player.hasMenuOpen.Value || player.Sprite.currentFrame == 84;
     }
     
@@ -245,7 +268,7 @@ public partial class FreezeTime: Mod
                 }
                 if (monster.invincibleCountdown > 0 || resetInvincible) {
                     monster.invincibleCountdown = 0;
-                    farmer.currentLocation.characters.Remove(character);
+                    farmer.currentLocation.characters.RemoveAt(i);
                     farmer.currentLocation.characters.Add(character);
                 }
             }
@@ -267,3 +290,19 @@ public partial class FreezeTime: Mod
     }
     
 }
+// if (farmer.currentLocation is FarmHouse) {
+//     foreach (var furniture in farmer.currentLocation.furniture.Where(furniture => furniture is BedFurniture)) {
+//         var tile = farmer.Tile;
+//         if (!farmer.currentLocation.lastTouchActionLocation.Equals(Vector2.Zero)) {
+//             continue;
+//         }
+//         if (tile.X >= furniture.TileLocation.X - (double) furniture.GetAdditionalTilePropertyRadius() && tile.X < furniture.TileLocation.X + (double) furniture.getTilesWide() + furniture.GetAdditionalTilePropertyRadius() && tile.Y >= furniture.TileLocation.Y - (double) furniture.GetAdditionalTilePropertyRadius() && tile.Y < furniture.TileLocation.Y + (double) furniture.getTilesHigh() + furniture.GetAdditionalTilePropertyRadius())
+//         {
+//             string? propertyValue = null;
+//             furniture.DoesTileHaveProperty((int)tile.X, (int)tile.Y, "TouchAction", "Back", ref propertyValue);
+//             if (propertyValue == "Sleep") {
+//                 
+//             }
+//         }
+//     }
+// }
