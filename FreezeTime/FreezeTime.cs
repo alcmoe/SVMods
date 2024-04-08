@@ -17,7 +17,6 @@ public partial class FreezeTime: Mod
     private static bool _lastFreezeStatus;
     private static bool _forcePassTime;
     private static readonly Vector2 FramePosition = new(44, 240);
-    private static Dictionary<int, int> _npcHealth = [];
     public override void Entry(IModHelper helper)
     {
         _frame = helper.ModContent.Load<Texture2D>("assets/Frame.png");
@@ -212,12 +211,15 @@ public partial class FreezeTime: Mod
     
     private void GameTickEvent(object? sender, EventArgs e)
     {
-        if (!Context.IsWorldReady || !Context.IsMainPlayer) {
+        if (!Context.IsWorldReady) {
             return;
         }
-        UpdateChecker();
-        ApplyFreezing();
-        ApplyUnFreezing();
+        if(Context.IsMainPlayer) {
+            UpdateChecker();
+            ApplyFreezing();
+            ApplyUnFreezing();
+        }
+        ApplyMonsterFreezing();
     }
     
     private void UpdateChecker()
@@ -250,27 +252,19 @@ public partial class FreezeTime: Mod
         if (!_lastFreezeStatus) {
              _lastFreezeStatus = true;
         }
+    }
 
-        foreach (var farmer in Game1.getOnlineFarmers()) {
-            for (var i = 0; i < farmer.currentLocation.characters.Count; i++) {
-                var character = farmer.currentLocation.characters[i];
-                if (character is not Monster monster) {
-                    continue;
-                }
-                var resetInvincible = false;
-                if (_npcHealth.ContainsKey(character.GetHashCode())) {
-                    if (_npcHealth[character.GetHashCode()] != monster.Health) {
-                        resetInvincible = true;
-                        _npcHealth[character.GetHashCode()] = monster.Health;
-                    }
-                } else {
-                    _npcHealth[character.GetHashCode()] = monster.Health;
-                }
-                if (monster.invincibleCountdown > 0 || resetInvincible) {
-                    monster.invincibleCountdown = 0;
-                    farmer.currentLocation.characters.RemoveAt(i);
-                    farmer.currentLocation.characters.Add(character);
-                }
+    private static void ApplyMonsterFreezing()
+    {
+        if (!Game1.netWorldState.Value.IsTimePaused) {
+            return;
+        }
+        foreach (var character in Game1.player.currentLocation.characters) {
+            if (character is not Monster monster) {
+                continue;
+            }
+            if (monster.invincibleCountdown > 0) {
+                monster.invincibleCountdown = 0;
             }
         }
     }
@@ -280,7 +274,6 @@ public partial class FreezeTime: Mod
         if (!_lastFreezeStatus || _checker.IsFrozen()) {
             return;
         }
-        _npcHealth.Clear();
         _lastFreezeStatus = false;
     }
     
@@ -288,21 +281,4 @@ public partial class FreezeTime: Mod
     {   
         Helper.Multiplayer.SendMessage(_checker.FreezeTimeStatus(), BroadcastStatusMessageType, modIDs: [ModManifest.UniqueID]);
     }
-    
 }
-// if (farmer.currentLocation is FarmHouse) {
-//     foreach (var furniture in farmer.currentLocation.furniture.Where(furniture => furniture is BedFurniture)) {
-//         var tile = farmer.Tile;
-//         if (!farmer.currentLocation.lastTouchActionLocation.Equals(Vector2.Zero)) {
-//             continue;
-//         }
-//         if (tile.X >= furniture.TileLocation.X - (double) furniture.GetAdditionalTilePropertyRadius() && tile.X < furniture.TileLocation.X + (double) furniture.getTilesWide() + furniture.GetAdditionalTilePropertyRadius() && tile.Y >= furniture.TileLocation.Y - (double) furniture.GetAdditionalTilePropertyRadius() && tile.Y < furniture.TileLocation.Y + (double) furniture.getTilesHigh() + furniture.GetAdditionalTilePropertyRadius())
-//         {
-//             string? propertyValue = null;
-//             furniture.DoesTileHaveProperty((int)tile.X, (int)tile.Y, "TouchAction", "Back", ref propertyValue);
-//             if (propertyValue == "Sleep") {
-//                 
-//             }
-//         }
-//     }
-// }
