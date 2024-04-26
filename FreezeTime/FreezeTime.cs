@@ -55,7 +55,7 @@ public partial class FreezeTime: Mod
         );        
         harmony.Patch(
             original: AccessTools.Method(typeof(Object), "CheckForActionOnFeedHopper"),
-            postfix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.FeedHopperPrefix))
+            prefix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.FeedHopperPrefix))
         );
     }
 
