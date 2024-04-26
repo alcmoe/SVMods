@@ -1,9 +1,11 @@
 ﻿using HarmonyLib;
-using StardewModdingAPI;
-using StardewValley;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using StardewModdingAPI;
+using StardewModdingAPI.Events;
+using StardewValley;
 using StardewValley.Monsters;
+using Object = StardewValley.Object;
 
 namespace FreezeTime;
 
@@ -50,6 +52,10 @@ public partial class FreezeTime: Mod
         harmony.Patch(
             original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.performTouchAction), [typeof(string[]), typeof(Vector2)]),
             postfix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.PerformSleepChecked))
+        );        
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Object), "CheckForActionOnFeedHopper"),
+            postfix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.FeedHopperPrefix))
         );
     }
 
@@ -80,14 +86,58 @@ public partial class FreezeTime: Mod
         {
             _forcePassTime = true;
         }        
-        
         public static void PerformSleepChecked()
         {
             _forcePassTime = false;
         }
+
+        public static bool FeedHopperPrefix(Object __instance, ref bool __result, Farmer who, bool justCheckingForActivity)
+        {
+            __result = CheckForActionOnFeedHopper();
+            return false;
+            bool CheckForActionOnFeedHopper() {
+                if (justCheckingForActivity) {
+                    return true;
+                }
+                if (who.ActiveObject != null) {
+                    return false;
+                }
+                if (who.freeSpotsInInventory() > 0) {
+                    var location = __instance.Location;
+                    var rootLocation = location.GetRootLocation();
+                    var piecesHay = rootLocation.piecesOfHay.Value;
+                    if (piecesHay > 0) {
+                        if (location is AnimalHouse i) {
+                            var piecesOfHayToRemove = Math.Min(i.animalsThatLiveHere.Count, piecesHay);
+                            piecesOfHayToRemove = Math.Max(1, piecesOfHayToRemove);
+                            var alreadyHay = i.numberOfObjectsWithName("Hay");
+                            piecesOfHayToRemove = alreadyHay == i.animalLimit.Value ? Math.Min(i.animalLimit.Value, piecesHay) : Math.Min(piecesOfHayToRemove, i.animalLimit.Value - alreadyHay);
+                            if (piecesOfHayToRemove != 0 && Game1.player.couldInventoryAcceptThisItem("(O)178", piecesOfHayToRemove))
+                            {
+                                rootLocation.piecesOfHay.Value -= Math.Max(1, piecesOfHayToRemove);
+                                who.addItemToInventoryBool(ItemRegistry.Create("(O)178", piecesOfHayToRemove));
+                                Game1.playSound("shwip");
+                            }
+                        } else if (Game1.player.couldInventoryAcceptThisItem("(O)178", 1)) {
+                            rootLocation.piecesOfHay.Value--;
+                            who.addItemToInventoryBool(ItemRegistry.Create("(O)178"));
+                            Game1.playSound("shwip");
+                        }
+                        if (rootLocation.piecesOfHay.Value <= 0) {
+                            __instance.showNextIndex.Value = false;
+                        }
+                        return true;
+                    }
+                    Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12942"));
+                } else {
+                    Game1.showRedMessage(Game1.content.LoadString("Strings\\StringsFromCSFiles:Crop.cs.588"));
+                }
+                return true;
+            }
+        }
     }
 
-    private void SaveLoadedEvent(object? sender, StardewModdingAPI.Events.SaveLoadedEventArgs e)
+    private void SaveLoadedEvent(object? sender, SaveLoadedEventArgs e)
     {
         _checker = new FreezeTimeChecker(_config);
         if (Context.IsMainPlayer) {
@@ -102,7 +152,7 @@ public partial class FreezeTime: Mod
         }
     }
     
-    private void ModMessageReceivedEvent(object? sender, StardewModdingAPI.Events.ModMessageReceivedEventArgs e)
+    private void ModMessageReceivedEvent(object? sender, ModMessageReceivedEventArgs e)
     {
         if (e.FromModID != ModManifest.UniqueID) {
             return;
@@ -132,7 +182,7 @@ public partial class FreezeTime: Mod
         }
     }
     
-    private void ButtonReleasedEvent(object? sender, StardewModdingAPI.Events.ButtonReleasedEventArgs e)
+    private void ButtonReleasedEvent(object? sender, ButtonReleasedEventArgs e)
     {
         if (e.Button != SButton.MouseLeft) {
             return;
@@ -176,7 +226,7 @@ public partial class FreezeTime: Mod
     }
     
     //main player
-    private void PlayerConnectedEvent(object? sender, StardewModdingAPI.Events.PeerConnectedEventArgs e)
+    private void PlayerConnectedEvent(object? sender, PeerConnectedEventArgs e)
     {
         if (!Context.IsMainPlayer) {
             return;
@@ -199,7 +249,7 @@ public partial class FreezeTime: Mod
         }
     }
 
-    private void PlayerDisconnectedEvent(object? sender, StardewModdingAPI.Events.PeerDisconnectedEventArgs e)
+    private void PlayerDisconnectedEvent(object? sender, PeerDisconnectedEventArgs e)
     {
         if (!Context.IsMainPlayer) {
             return;
