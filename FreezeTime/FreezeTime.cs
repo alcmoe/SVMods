@@ -177,7 +177,7 @@ public partial class FreezeTime: Mod
     
     private void PreRenderHudEvent(object? sender, EventArgs e)
     {
-        if (Game1.displayHUD) {
+        if (Game1.displayHUD && !Game1.freezeControls) {
             DrawStatusBar();
         }
     }
