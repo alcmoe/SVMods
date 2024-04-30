@@ -54,10 +54,6 @@ public partial class FreezeTime: Mod
             postfix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.PerformSleepChecked))
         );        
         harmony.Patch(
-            original: AccessTools.Method(typeof(Object), "CheckForActionOnFeedHopper"),
-            prefix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.FeedHopperPrefix))
-        );
-        harmony.Patch(
             original: AccessTools.Method(typeof(Object), nameof(Object.minutesElapsed)),
             postfix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.MinutesElapsedPostfix))
         );
@@ -95,52 +91,7 @@ public partial class FreezeTime: Mod
             _forcePassTime = false;
         }
 
-        public static bool FeedHopperPrefix(Object __instance, ref bool __result, Farmer who, bool justCheckingForActivity)
-        {
-            __result = CheckForActionOnFeedHopper();
-            return false;
-            bool CheckForActionOnFeedHopper() {
-                if (justCheckingForActivity) {
-                    return true;
-                }
-                if (who.ActiveObject != null) {
-                    return false;
-                }
-                if (who.freeSpotsInInventory() > 0) {
-                    var location = __instance.Location;
-                    var rootLocation = location.GetRootLocation();
-                    var piecesHay = rootLocation.piecesOfHay.Value;
-                    if (piecesHay > 0) {
-                        if (location is AnimalHouse i) {
-                            var piecesOfHayToRemove = Math.Min(i.animalsThatLiveHere.Count, piecesHay);
-                            piecesOfHayToRemove = Math.Max(1, piecesOfHayToRemove);
-                            var alreadyHay = i.numberOfObjectsWithName("Hay");
-                            piecesOfHayToRemove = alreadyHay == i.animalLimit.Value ? Math.Min(i.animalLimit.Value, piecesHay) : Math.Min(piecesOfHayToRemove, i.animalLimit.Value - alreadyHay);
-                            if (piecesOfHayToRemove != 0 && Game1.player.couldInventoryAcceptThisItem("(O)178", piecesOfHayToRemove))
-                            {
-                                rootLocation.piecesOfHay.Value -= Math.Max(1, piecesOfHayToRemove);
-                                who.addItemToInventoryBool(ItemRegistry.Create("(O)178", piecesOfHayToRemove));
-                                Game1.playSound("shwip");
-                            }
-                        } else if (Game1.player.couldInventoryAcceptThisItem("(O)178", 1)) {
-                            rootLocation.piecesOfHay.Value--;
-                            who.addItemToInventoryBool(ItemRegistry.Create("(O)178"));
-                            Game1.playSound("shwip");
-                        }
-                        if (rootLocation.piecesOfHay.Value <= 0) {
-                            __instance.showNextIndex.Value = false;
-                        }
-                        return true;
-                    }
-                    Game1.drawObjectDialogue(Game1.content.LoadString("Strings\\StringsFromCSFiles:Object.cs.12942"));
-                } else {
-                    Game1.showRedMessage(Game1.content.LoadString("Strings\\StringsFromCSFiles:Crop.cs.588"));
-                }
-                return true;
-            }
-        }
-
-        private static Dictionary<int, bool> hopperMessageCache = [];
+        private static readonly Dictionary<int, bool> HopperMessageCache = [];
 
         public static void MinutesElapsedPostfix(Object __instance)
         {
@@ -160,13 +111,13 @@ public partial class FreezeTime: Mod
                             __instance.showNextIndex.Value = false;
                             __instance.ResetParentSheetIndex();
                             __instance.AttemptAutoLoad(Game1.player);
-                            hopperMessageCache.Remove(__instance.GetHashCode());
+                            HopperMessageCache.Remove(__instance.GetHashCode());
                         } else {
                             __instance.heldObject.Value = objectThatWasHeld;
-                            if (hopperMessageCache.ContainsKey(__instance.GetHashCode())) {
+                            if (HopperMessageCache.ContainsKey(__instance.GetHashCode())) {
                                 return;
                             }
-                            hopperMessageCache.Add(__instance.GetHashCode(), true);
+                            HopperMessageCache.Add(__instance.GetHashCode(), true);
                             Game1.showRedMessage("Hopper is full,can not collect more items!");
                         }
                     }

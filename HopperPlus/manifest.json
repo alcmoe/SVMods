@@ -1,0 +1,12 @@
+{
+  "Name": "HopperPlus",
+  "Author": "mori_sensei",
+  "Version": "1.0.0",
+  "Description": "hopper will collect machine's(now only seed maker) output item.",
+  "UniqueID": "mori_sensei.HopperPlus",
+  "EntryDll": "HopperPlus.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [],
+  "Dependencies": [
+  ]
+}

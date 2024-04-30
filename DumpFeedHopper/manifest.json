@@ -1,0 +1,12 @@
+{
+  "Name": "DumpFeedHopper",
+  "Author": "mori_sensei",
+  "Version": "1.0.0",
+  "Description": "now u can collect hays from feed hopper,even if feeding location is full.",
+  "UniqueID": "mori_sensei.DumpFeedHopper",
+  "EntryDll": "DumpFeedHopper.dll",
+  "MinimumApiVersion": "4.0.0",
+  "UpdateKeys": [],
+  "Dependencies": [
+  ]
+}
