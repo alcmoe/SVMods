@@ -57,6 +57,10 @@ public partial class FreezeTime: Mod
             original: AccessTools.Method(typeof(Object), "CheckForActionOnFeedHopper"),
             prefix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.FeedHopperPrefix))
         );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Object), nameof(Object.minutesElapsed)),
+            postfix: new HarmonyMethod(typeof(Game1Patcher), nameof(Game1Patcher.MinutesElapsedPostfix))
+        );
     }
 
     private class Game1Patcher
@@ -133,6 +137,40 @@ public partial class FreezeTime: Mod
                     Game1.showRedMessage(Game1.content.LoadString("Strings\\StringsFromCSFiles:Crop.cs.588"));
                 }
                 return true;
+            }
+        }
+
+        private static Dictionary<int, bool> hopperMessageCache = [];
+
+        public static void MinutesElapsedPostfix(Object __instance)
+        {
+            if (!Game1.player.IsMainPlayer) {
+                return;
+            }
+            if (__instance.QualifiedItemId == "(BC)25" && __instance.readyForHarvest.Value) {
+                if (__instance.Location != null && __instance.Location.objects.TryGetValue(new Vector2(__instance.TileLocation.X, __instance.TileLocation.Y - 1f), out var fromObj)) {
+                    if (fromObj is StardewValley.Objects.Chest hopper && hopper.specialChestType.Value == StardewValley.Objects.Chest.SpecialChestTypes.AutoLoader) {
+                        var objectThatWasHeld = __instance.heldObject.Value;
+                        __instance.heldObject.Value = null;
+                        if (hopper.addItem(objectThatWasHeld) is null) {
+                            Game1.playSound("coin");
+                            MachineDataUtility.UpdateStats(__instance.GetMachineData()?.StatsToIncrementWhenHarvested, objectThatWasHeld, objectThatWasHeld.Stack);
+                            __instance.heldObject.Value = null;
+                            __instance.readyForHarvest.Value = false;
+                            __instance.showNextIndex.Value = false;
+                            __instance.ResetParentSheetIndex();
+                            __instance.AttemptAutoLoad(Game1.player);
+                            hopperMessageCache.Remove(__instance.GetHashCode());
+                        } else {
+                            __instance.heldObject.Value = objectThatWasHeld;
+                            if (hopperMessageCache.ContainsKey(__instance.GetHashCode())) {
+                                return;
+                            }
+                            hopperMessageCache.Add(__instance.GetHashCode(), true);
+                            Game1.showRedMessage("Hopper is full,can not collect more items!");
+                        }
+                    }
+                }
             }
         }
     }
