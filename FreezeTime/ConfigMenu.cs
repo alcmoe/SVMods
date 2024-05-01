@@ -1,4 +1,5 @@
-﻿using StardewModdingAPI;
+﻿using Microsoft.Xna.Framework;
+using StardewModdingAPI;
 
 namespace FreezeTime
 {
@@ -24,7 +25,7 @@ namespace FreezeTime
             configMenu.Register(
                 mod: ModManifest,
                 reset: () => _config = new ModConfig(),
-                save: () => Helper.WriteConfig(_config)
+                save: WriteConfig
             );
             configMenu.AddTextOption(
                 mod: this.ModManifest,
@@ -33,6 +34,19 @@ namespace FreezeTime
                 setValue: value => _config.PauseLogic = value,
                 allowedValues: ["All", "Any"]
             );
+        }
+
+        private void WriteConfig()
+        {
+            if (StardewValley.Game1.IsMultiplayer) {
+                if (!StardewValley.Game1.player.IsMainPlayer) {
+                    StardewValley.Game1.chatBox.addMessage("u can not change pauseLogic as a client player!", Color.Red);
+                    return;
+                }
+                BroadcastConfig();
+                StardewValley.Game1.chatBox.addMessage("Broadcasting config to  all clients", Color.Blue);
+            }
+            Helper.WriteConfig(_config);
         }
     }
 
