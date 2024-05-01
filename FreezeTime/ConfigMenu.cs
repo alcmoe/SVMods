@@ -25,7 +25,7 @@ namespace FreezeTime
                 return;
             configMenu.Register(
                 mod: ModManifest,
-                reset: () => _config = new ModConfig(),
+                reset: ResetConfig,
                 save: WriteConfig
             );
             configMenu.AddTextOption(
@@ -48,6 +48,16 @@ namespace FreezeTime
                 StardewValley.Game1.chatBox.addMessage("Broadcasting config to  all clients", Color.Blue);
             }
             Helper.WriteConfig(_config);
+        }
+
+        private void ResetConfig()
+        {
+            if (StardewValley.Game1.IsMultiplayer) {
+                if (!StardewValley.Game1.player.IsMainPlayer) {
+                    return;
+                }
+            }
+            _config = new ModConfig();
         }
     }
 
