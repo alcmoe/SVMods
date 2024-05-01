@@ -5,7 +5,7 @@ namespace FreezeTime
 {
     public partial class FreezeTime
     {
-        private ModConfig _config = new();
+        private ModConfig _config = null!;
         public class ModConfig
         {
             public string PauseLogic { get; set; } = "All";
@@ -19,6 +19,7 @@ namespace FreezeTime
         private void GameLaunchedEvent(object? sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
             _config = Helper.ReadConfig<ModConfig>();
+            _checker = new FreezeTimeChecker(_config);
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (configMenu is null)
                 return;

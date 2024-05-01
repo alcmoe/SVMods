@@ -15,7 +15,7 @@ public partial class FreezeTime: Mod
     private const string BroadcastConfigMessageType = "_FREEZE_CONFIG";
     private static Texture2D? _frame, _blackBlock, _frozenBlock,_unfrozenBlock,_unloadedButFrozenBlock,_unloadedButUnfrozenBlock;
 
-    private FreezeTimeChecker _checker = new(new ModConfig());
+    private FreezeTimeChecker _checker = null!;
     private static bool _lastFreezeStatus;
     private static bool _forcePassTime;
     private static readonly Vector2 FramePosition = new(44, 240);
