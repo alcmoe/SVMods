@@ -136,7 +136,7 @@ public class Mod: StardewModdingAPI.Mod
 
     private static void DayStartedEvent(object? sender, DayStartedEventArgs e)
     {
-        if (Game1.dayTimeMoneyBox.moneyDial.previousTargetValue - Game1.dayTimeMoneyBox.moneyDial.currentValue > 500) {
+        if (Game1.dayTimeMoneyBox.moneyDial.previousTargetValue - Game1.dayTimeMoneyBox.moneyDial.currentValue >= 1000000) {
             DelayedAction.playSoundAfterDelay(_slb["million"][0], 1500);
         }
         
