@@ -4,6 +4,8 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Audio;
 using StardewValley.Menus;
+using StardewValley.Objects;
+using StardewValley.Tools;
 using SObject = StardewValley.Object;
 
 namespace WeirdSounds
@@ -49,11 +51,27 @@ namespace WeirdSounds
                 case "axchop":
                 case "woodyHit":
                 case "clubswipe":
-                case "clubSmash":
                 case "swordswipe":
-                case "daggerswipe":
                     if (Game1.player.UsingTool) {
                         __instance.PlayLocal(CueName("tool"), location, position, pitch, context, out _);
+                    }
+                    break;
+                case "daggerswipe":
+                    if (Game1.player.ActiveItem is StardewValley.Tools.MeleeWeapon dagger && dagger.type.Value == StardewValley.Tools.MeleeWeapon.dagger) {
+                        int[] an = [276, 274, 272, 278];
+                        if (an.Any(p => p == Game1.player.FarmerSprite.currentSingleAnimation)) {
+                            if (MeleeWeapon.daggerHitsLeft == 4) {
+                                __instance.PlayLocal(CueName("daggerSpecial"), location, position, pitch, context, out _);
+                            }
+                        } else {
+                            __instance.PlayLocal(CueName("tool"), location, position, pitch, context, out _);
+                        }
+                    }
+                    break;
+                case "clubSmash":
+                    if (Game1.player.UsingTool) {
+                        __instance.PlayLocal(CueName("clubSmash"), location, position, pitch, context, out _);
+                        return false;
                     }
                     break;
                 case "cancel":
@@ -66,11 +84,6 @@ namespace WeirdSounds
                         }
                     } else {
                         __instance.PlayLocal(CueName("cancel"), location, position, pitch, context, out _);
-                    }
-                    break;
-                case "sell": 
-                    if (Game1.activeClickableMenu is ShopMenu) { //debug
-                        __instance.PlayLocal(CueName("sell"), location, position, pitch, context, out _);
                     }
                     break;
                 case "trashcan":
@@ -105,8 +118,16 @@ namespace WeirdSounds
                     break;
                 case "bigDeSelect":
                     if (Game1.activeClickableMenu is LevelUpMenu { isProfessionChooser: false }) { //selected profession
-                        Game1.playSound(CueName("ok"));
+                        __instance.PlayLocal(CueName("ok"), location, position, pitch, context, out _);
                     }   
+                    break;
+                case "openChest":
+                    if (Game1.didPlayerJustRightClick() && Game1.currentLocation.objects.TryGetValue(Game1.player.GetGrabTile(), out var obj)) {
+                        if (obj is Chest chest && !chest.playerChest.Value) {
+                            __instance.PlayLocal(CueName("trashcan"), location, position, pitch, context, out _);
+                            return false;
+                        }
+                    }
                     break;
             }
             return true;
@@ -114,7 +135,7 @@ namespace WeirdSounds
         
         private static bool PetPrefix(FarmAnimal __instance, bool is_auto_pet)
         {
-            if (is_auto_pet || !__instance.type.Value.EndsWith("Chicken") || __instance.wasPet.Value || Game1.options.muteAnimalSounds) {
+            if (is_auto_pet || !__instance.type.Value.EndsWith("Chicken") || __instance.wasPet.Value || Game1.options.muteAnimalSounds || (Game1.timeOfDay >= 1900 && !__instance.isMoving())) {
                 return true;
             }
             Game1.playSound(CueName("cluck"));

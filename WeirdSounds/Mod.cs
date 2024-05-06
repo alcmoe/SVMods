@@ -8,8 +8,10 @@ internal partial class Mod: StardewModdingAPI.Mod
     {
         Patcher.PatchAll(this);
         WeirdSoundsLibrary.Load(this);
-        Helper.Events.GameLoop.TimeChanged += TimeChangeEvent;
+        Helper.Events.Player.Warped += WarpedEvent;
         Helper.Events.Display.MenuChanged += MenuChangedEvent;
+        Helper.Events.GameLoop.TimeChanged += TimeChangeEvent;
         Helper.Events.GameLoop.DayStarted += DayStartedEvent;
+        Helper.Events.GameLoop.OneSecondUpdateTicking += OneSecondUpdateTickingEvent;
     }
 }

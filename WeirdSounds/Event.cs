@@ -1,4 +1,7 @@
-﻿using StardewValley;
+﻿using Microsoft.Xna.Framework;
+using StardewModdingAPI;
+using StardewValley;
+using StardewValley.Characters;
 using StardewValley.Menus;
 
 namespace WeirdSounds
@@ -58,6 +61,39 @@ namespace WeirdSounds
         {
             if (Game1.dayTimeMoneyBox.moneyDial.previousTargetValue - Game1.dayTimeMoneyBox.moneyDial.currentValue >= 1000000) {
                 DelayedAction.playSoundAfterDelay(CueName("million"), 1500);
+            }
+        }
+
+
+        private static readonly Dictionary<int, bool> PetSleeping = [];
+        private static void OneSecondUpdateTickingEvent(object? sender, StardewModdingAPI.Events.OneSecondUpdateTickingEventArgs e)
+        {
+            if (!Context.IsWorldReady) {
+                return;
+            }
+            foreach (var npc in Game1.player.currentLocation.characters.Where(p => p is Pet)) {
+                if (npc is not Pet pet) {
+                    continue;
+                }
+                if (!PetSleeping.ContainsKey(pet.GetHashCode())) {
+                    PetSleeping.Add(pet.GetHashCode(), true);
+                }
+                if (pet.CurrentBehavior == "Sleep") {
+                    if (Vector2.Distance(pet.Position, Game1.player.Position) > 50 || !PetSleeping[pet.GetHashCode()]) {
+                        continue;
+                    }
+                    Game1.playSound(CueName("sleep"));
+                    PetSleeping[pet.GetHashCode()] = false;
+                } else {
+                    PetSleeping[pet.GetHashCode()] = true;
+                }
+            }
+        }        
+        
+        private static void WarpedEvent(object? sender, StardewModdingAPI.Events.WarpedEventArgs e)
+        {
+            if (e.NewLocation is StardewValley.Locations.AdventureGuild && e.Player == Game1.player) {
+                Game1.playSound(CueName("sell"));
             }
         }
     }
