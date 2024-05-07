@@ -1,7 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Reflection;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Characters;
+using StardewValley.Locations;
 using StardewValley.Menus;
 
 namespace WeirdSounds
@@ -64,37 +66,42 @@ namespace WeirdSounds
             }
         }
 
+        private static readonly Dictionary<int, bool> CatFlopDictionary = [];
 
-        private static readonly Dictionary<int, bool> PetSleeping = [];
         private static void OneSecondUpdateTickingEvent(object? sender, StardewModdingAPI.Events.OneSecondUpdateTickingEventArgs e)
         {
             if (!Context.IsWorldReady) {
                 return;
             }
-            foreach (var npc in Game1.player.currentLocation.characters.Where(p => p is Pet)) {
+            if (Game1.player.currentLocation is not (Farm or FarmHouse)) {
+                return;
+            }
+            foreach (var npc in Game1.player.currentLocation.characters.Where(p => p is Pet pet && pet.petType.Value =="Cat")) {
                 if (npc is not Pet pet) {
                     continue;
                 }
-                if (!PetSleeping.ContainsKey(pet.GetHashCode())) {
-                    PetSleeping.Add(pet.GetHashCode(), true);
+                if (!CatFlopDictionary.ContainsKey(pet.GetHashCode())) {
+                    CatFlopDictionary.Add(pet.GetHashCode(), true);
                 }
-                if (pet.CurrentBehavior == "Sleep") {
-                    if (Vector2.Distance(pet.Position, Game1.player.Position) > 50 || !PetSleeping[pet.GetHashCode()]) {
+                if (pet.CurrentBehavior == "Flop") {
+                    if (!CatFlopDictionary[pet.GetHashCode()]) {
                         continue;
                     }
-                    Game1.playSound(CueName("sleep"));
-                    PetSleeping[pet.GetHashCode()] = false;
+                    if (Vector2.Distance(pet.Position, Game1.player.Position) < 16 * 6) {
+                        Game1.playSound(CueName("sleep"));
+                    }
+                    CatFlopDictionary[pet.GetHashCode()] = false;
                 } else {
-                    PetSleeping[pet.GetHashCode()] = true;
+                    CatFlopDictionary[pet.GetHashCode()] = true;
                 }
             }
-        }        
+        }       
         
         private static void WarpedEvent(object? sender, StardewModdingAPI.Events.WarpedEventArgs e)
         {
-            if (e.NewLocation is StardewValley.Locations.AdventureGuild && e.Player == Game1.player) {
+            if (e.NewLocation is AdventureGuild && e.Player == Game1.player) {
                 Game1.playSound(CueName("sell"));
             }
-        }
+        }        
     }
 }

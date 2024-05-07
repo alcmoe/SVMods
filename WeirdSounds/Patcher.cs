@@ -51,13 +51,6 @@ namespace WeirdSounds
                 case "axchop":
                 case "woodyHit":
                 case "clubswipe":
-                    if (Game1.player.UsingTool) {
-                        int[] an = [176, 168, 160, 184];
-                        if (an.All(ani => ani != Game1.player.FarmerSprite.currentSingleAnimation)) {
-                            __instance.PlayLocal(CueName("tool"), location, position, pitch, context, out _);
-                        }
-                    }
-                    break;
                 case "swordswipe":
                     if (Game1.player.UsingTool) {
                         __instance.PlayLocal(CueName("tool"), location, position, pitch, context, out _);
@@ -76,8 +69,10 @@ namespace WeirdSounds
                     }
                     break;
                 case "clubSmash":
-                    if (Game1.player.UsingTool) {
-                        __instance.PlayLocal(CueName("clubSmash"), location, position, pitch, context, out _);
+                    if (Game1.player.ActiveItem is MeleeWeapon club && club.type.Value == MeleeWeapon.club && club.isOnSpecial) {
+                        if (MeleeWeapon.clubCooldown > 5800 || (club.lastUser.professions.Contains(28) && MeleeWeapon.clubCooldown > 2700)) {
+                            __instance.PlayLocal(CueName("clubSmash"), location, position, pitch, context, out _);
+                        }
                         return false;
                     }
                     break;
