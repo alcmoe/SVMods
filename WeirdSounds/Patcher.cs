@@ -51,13 +51,20 @@ namespace WeirdSounds
                 case "axchop":
                 case "woodyHit":
                 case "clubswipe":
+                    if (Game1.player.UsingTool) {
+                        int[] an = [176, 168, 160, 184];
+                        if (an.All(ani => ani != Game1.player.FarmerSprite.currentSingleAnimation)) {
+                            __instance.PlayLocal(CueName("tool"), location, position, pitch, context, out _);
+                        }
+                    }
+                    break;
                 case "swordswipe":
                     if (Game1.player.UsingTool) {
                         __instance.PlayLocal(CueName("tool"), location, position, pitch, context, out _);
                     }
                     break;
                 case "daggerswipe":
-                    if (Game1.player.ActiveItem is StardewValley.Tools.MeleeWeapon dagger && dagger.type.Value == StardewValley.Tools.MeleeWeapon.dagger) {
+                    if (Game1.player.ActiveItem is MeleeWeapon dagger && dagger.type.Value == MeleeWeapon.dagger) {
                         int[] an = [276, 274, 272, 278];
                         if (an.Any(p => p == Game1.player.FarmerSprite.currentSingleAnimation)) {
                             if (MeleeWeapon.daggerHitsLeft == 4) {
@@ -87,11 +94,13 @@ namespace WeirdSounds
                     }
                     break;
                 case "trashcan":
-                    __instance.PlayLocal(CueName("trashcan"), location, position, pitch,context, out _);
+                    if (Game1.activeClickableMenu is null) {
+                        __instance.PlayLocal(CueName("trashcan"), location, position, pitch,context, out _);
+                    }
                     break;
                 case "batFlap":
                     var player = Game1.player;
-                    if (player.ActiveItem is StardewValley.Tools.MeleeWeapon sword && sword.type.Value == StardewValley.Tools.MeleeWeapon.defenseSword) {
+                    if (player.ActiveItem is MeleeWeapon sword && sword.type.Value == MeleeWeapon.defenseSword) {
                         int[] an = [252, 243, 259, 234];
                         if (an.Any(p => p == player.FarmerSprite.currentSingleAnimation)) { 
                             __instance.PlayLocal(CueName("defense"), location, position, pitch, context, out _);
@@ -138,7 +147,7 @@ namespace WeirdSounds
             if (is_auto_pet || !__instance.type.Value.EndsWith("Chicken") || __instance.wasPet.Value || Game1.options.muteAnimalSounds || (Game1.timeOfDay >= 1900 && !__instance.isMoving())) {
                 return true;
             }
-            Game1.playSound(CueName("cluck"));
+            Game1.playSound(CueName("cluck"), WeirdSoundsLibrary.Random.Next(-200, 300));
             return true;
         }
         
@@ -170,15 +179,20 @@ namespace WeirdSounds
         
         private static void AnswerDialogueActionPostfix(string questionAndAnswer)
         {
-            if (questionAndAnswer == "TroutDerbyBooth_Rewards") {
-                if (Game1.delayedActions.Any(action => action.stringData == "getNewSpecialItem")) {
+            switch (questionAndAnswer) {
+                case "SquidFestBooth_Rewards":
+                case "Museum_Collect":
                     Game1.playSound(CueName("reward"));
-                }
-            } else if (questionAndAnswer.ToLower().Contains("rewards")) {
-                Game1.playSound(CueName("reward"));
-            }
-            if (questionAndAnswer.ToLower() == "sleep_yes") {
-                Game1.playSound(CueName("goodNight"));
+                    break;
+                case "TroutDerbyBooth_Rewards":
+                    if (Game1.delayedActions.Any(action => action.stringData == "getNewSpecialItem")) {
+                        Game1.playSound(CueName("reward"));
+                    }
+                    break;
+                case "SleepTent_Yes":
+                case "Sleep_Yes":
+                    Game1.playSound(CueName("goodNight"));
+                    break;
             }
         }
     }

@@ -11,6 +11,7 @@ namespace WeirdSounds
         private static readonly Dictionary<string, int> LibraryIndex = [];
         private static readonly Dictionary<string, int> LibraryTimerDelay = [];
         private const char SubSoundSeparator = '_';
+        internal static readonly Random Random = new();
 
         public static void Load(IMod modInstance)
         {
@@ -45,7 +46,7 @@ namespace WeirdSounds
                 LibraryTimerDelay["tool"] = 5;
             }
             if (LibraryTimerDelay.ContainsKey("cluck")) {
-                LibraryTimerDelay["cluck"] = 20;
+                LibraryTimerDelay["cluck"] = -2;
             }
             if (LibraryTimerDelay.ContainsKey("machine")) {
                 LibraryTimerDelay["machine"] = 60;
@@ -57,24 +58,30 @@ namespace WeirdSounds
             if (!Library.ContainsKey(key)) {
                 return "Coin";
             }
-            if (LibraryTimerDelay[key] > -1) {
-                var currentTimestamp = (long)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
-                if (currentTimestamp - LibraryTimer[key] > LibraryTimerDelay[key]) {
-                    LibraryIndex[key] = 0;
-                } else {
-                    if (LibraryIndex[key] + 1 >= Library[key].Count) {
+            switch (LibraryTimerDelay[key]) {
+                case > -1: {
+                    var currentTimestamp = (long)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
+                    if (currentTimestamp - LibraryTimer[key] > LibraryTimerDelay[key]) {
                         LibraryIndex[key] = 0;
                     } else {
-                        LibraryIndex[key]++;
+                        if (LibraryIndex[key] + 1 >= Library[key].Count) {
+                            LibraryIndex[key] = 0;
+                        } else {
+                            LibraryIndex[key]++;
+                        }
                     }
+                    LibraryTimer[key] = currentTimestamp;
+                    break;
                 }
-                LibraryTimer[key] = currentTimestamp;
-            } else {
-                if (LibraryIndex[key] + 1 >= Library[key].Count) {
+                case -1 when LibraryIndex[key] + 1 >= Library[key].Count:
                     LibraryIndex[key] = 0;
-                } else {
+                    break;
+                case -1:
                     LibraryIndex[key]++;
-                }
+                    break;
+                case -2:
+                    LibraryIndex[key] = Random.Next(Library[key].Count);
+                    break;
             }
             return Library[key][LibraryIndex[key]];
         }
