@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Audio;
+using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Objects;
 using StardewValley.Tools;
@@ -49,10 +50,19 @@ namespace WeirdSounds
             switch (cueName) {
                 case "hammer":
                 case "axchop":
-                case "woodyHit":
                 case "clubswipe":
                 case "swordswipe":
                     if (Game1.player.UsingTool) {
+                        __instance.PlayLocal(CueName("tool"), location, position, pitch, context, out _);
+                    }
+                    break;
+                case "woodyHit":
+                    if (Game1.player.UsingTool) {
+                        if (location is MineShaft) {
+                            if (location.resourceClumps.Any(c => (c.parentSheetIndex.Value is 752 or 754 or 756 or 758) && c.shakeTimer > 0)) {
+                                return false;
+                            }
+                        }
                         __instance.PlayLocal(CueName("tool"), location, position, pitch, context, out _);
                     }
                     break;
