@@ -5,6 +5,7 @@ using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Locations;
 using StardewValley.Menus;
+using StardewValley.Monsters;
 
 namespace WeirdSounds
 {
@@ -61,6 +62,7 @@ namespace WeirdSounds
         
         private static void DayStartedEvent(object? sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
+            SerpentBarkDictionary.Clear();
             if (Game1.dayTimeMoneyBox.moneyDial.previousTargetValue - Game1.dayTimeMoneyBox.moneyDial.currentValue >= 1000000) {
                 DelayedAction.playSoundAfterDelay(CueName("million"), 1500);
             }
@@ -68,10 +70,25 @@ namespace WeirdSounds
 
         private static readonly Dictionary<int, bool> CatFlopDictionary = [];
 
+        private static readonly Dictionary<int, bool> SerpentBarkDictionary = [];
+        
         private static void OneSecondUpdateTickingEvent(object? sender, StardewModdingAPI.Events.OneSecondUpdateTickingEventArgs e)
         {
             if (!Context.IsWorldReady) {
                 return;
+            }
+            const int timeout = 300 * 1000;
+            if (Game1.player.timerSinceLastMovement % timeout >= timeout - 1 * 1000) {
+                Game1.playSound(CueName("timeout"));
+            }
+            if (Game1.player.currentLocation is MineShaft { locationContextId: "Desert" } ms) {
+                foreach (var npc in ms.characters) {
+                    if (npc is not Serpent s || !s.withinPlayerThreshold() || SerpentBarkDictionary.ContainsKey(s.GetHashCode()) || !Game1.viewport.Contains(new xTile.Dimensions.Location((int)s.Position.X, (int)s.Position.Y))) {
+                        continue;
+                    }
+                    Game1.playSound(CueName("IAmComing"));
+                    SerpentBarkDictionary.Add(s.GetHashCode(), true);
+                }
             }
             if (Game1.player.currentLocation is not (Farm or FarmHouse)) {
                 return;
