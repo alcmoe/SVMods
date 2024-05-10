@@ -1,11 +1,11 @@
-﻿using System.Reflection;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Characters;
 using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Monsters;
+using StardewValley.Tools;
 
 namespace WeirdSounds
 {
@@ -30,8 +30,9 @@ namespace WeirdSounds
                     return;
             }
         }
-        private static readonly string[] JewelList = ["797", "62", "72", "60", "82", "84", "70", "74", "64", "68", "66"];
         
+        private static readonly string[] JewelList = ["797", "62", "72", "60", "82", "84", "70", "74", "64", "68", "66"];
+            
         private static void MenuChangedEvent(object? sender, StardewModdingAPI.Events.MenuChangedEventArgs e)
         {
             switch (e.NewMenu) {
@@ -41,7 +42,7 @@ namespace WeirdSounds
                 case BobberBar { treasure: true } bBar:
                     DelayedAction.playSoundAfterDelay(CueName("treasureBox"), (int) bBar.treasureAppearTimer);
                     return;
-                case ItemGrabMenu { context: StardewValley.Tools.FishingRod } igm: {
+                case ItemGrabMenu { context: FishingRod } igm: {
                     var price = 0;
                     var jewel = false;
                     foreach (var tr in igm.ItemsToGrabMenu.actualInventory) {
@@ -59,18 +60,14 @@ namespace WeirdSounds
                 }
             }
         }
-        
+            
         private static void DayStartedEvent(object? sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
-            SerpentBarkDictionary.Clear();
+            mutex.DailyClearCache();
             if (Game1.dayTimeMoneyBox.moneyDial.previousTargetValue - Game1.dayTimeMoneyBox.moneyDial.currentValue >= 1000000) {
                 DelayedAction.playSoundAfterDelay(CueName("million"), 1500);
             }
         }
-
-        private static readonly Dictionary<int, bool> CatFlopDictionary = [];
-
-        private static readonly Dictionary<int, bool> SerpentBarkDictionary = [];
         
         private static void OneSecondUpdateTickingEvent(object? sender, StardewModdingAPI.Events.OneSecondUpdateTickingEventArgs e)
         {
@@ -83,11 +80,11 @@ namespace WeirdSounds
             }
             if (Game1.player.currentLocation is MineShaft { locationContextId: "Desert" } ms) {
                 foreach (var npc in ms.characters) {
-                    if (npc is not Serpent s || !s.withinPlayerThreshold() || SerpentBarkDictionary.ContainsKey(s.GetHashCode()) || !Game1.viewport.Contains(new xTile.Dimensions.Location((int)s.Position.X, (int)s.Position.Y))) {
+                    if (npc is not Serpent s || !s.withinPlayerThreshold() || mutex.SerpentBarkDictionary.ContainsKey(s.GetHashCode()) || !Game1.viewport.Contains(new xTile.Dimensions.Location((int)s.Position.X, (int)s.Position.Y))) {
                         continue;
                     }
                     Game1.playSound(CueName("IAmComing"));
-                    SerpentBarkDictionary.Add(s.GetHashCode(), true);
+                    mutex.SerpentBarkDictionary.Add(s.GetHashCode(), true);
                 }
             }
             if (Game1.player.currentLocation is not (Farm or FarmHouse)) {
@@ -97,28 +94,92 @@ namespace WeirdSounds
                 if (npc is not Pet pet) {
                     continue;
                 }
-                if (!CatFlopDictionary.ContainsKey(pet.GetHashCode())) {
-                    CatFlopDictionary.Add(pet.GetHashCode(), true);
+                if (!mutex.CatFlopDictionary.ContainsKey(pet.GetHashCode())) {
+                    mutex.CatFlopDictionary.Add(pet.GetHashCode(), true);
                 }
                 if (pet.CurrentBehavior == "Flop") {
-                    if (!CatFlopDictionary[pet.GetHashCode()]) {
+                    if (!mutex.CatFlopDictionary[pet.GetHashCode()]) {
                         continue;
                     }
                     if (Vector2.Distance(pet.Position, Game1.player.Position) < 16 * 6) {
                         Game1.playSound(CueName("sleep"));
                     }
-                    CatFlopDictionary[pet.GetHashCode()] = false;
+                    mutex.CatFlopDictionary[pet.GetHashCode()] = false;
                 } else {
-                    CatFlopDictionary[pet.GetHashCode()] = true;
+                    mutex.CatFlopDictionary[pet.GetHashCode()] = true;
                 }
             }
         }       
-        
+            
         private static void WarpedEvent(object? sender, StardewModdingAPI.Events.WarpedEventArgs e)
         {
             if (e.NewLocation is AdventureGuild && e.Player == Game1.player) {
                 Game1.playSound(CueName("sell"));
             }
-        }        
+        }
+
+        private static void UpdateTickedEvent(object? sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
+        {
+            if (!Context.IsWorldReady) {
+                return;
+            }
+            if (Game1.player.UsingTool) {
+                if (!mutex.ToolMutex) {
+                    return;
+                }
+                mutex.ToolMutex = false;
+                if (Game1.player.ActiveItem is MeleeWeapon dagger && dagger.type.Value == MeleeWeapon.dagger) {
+                    if (dagger.isOnSpecial) {
+                        Game1.playSound(CueName("daggerSpecial"));
+                        return;
+                    }
+                }
+                if (Game1.player.ActiveItem is MeleeWeapon club && club.type.Value == MeleeWeapon.club) {
+                    if (club.isOnSpecial) {
+                        Game1.playSound(CueName("clubSmash"));
+                        return;
+                    }
+                }
+                if (Game1.player.ActiveItem is MeleeWeapon sword && sword.type.Value == MeleeWeapon.defenseSword) {
+                    if (sword.isOnSpecial) {
+                        Game1.playSound(CueName("defense"));
+                        var toolLocation = Game1.player.GetToolLocation();
+                        var zero1 = Vector2.Zero;
+                        var zero2 = Vector2.Zero;
+                        var areaOfEffect = sword.getAreaOfEffect((int)toolLocation.X, (int)toolLocation.Y, Game1.player.FacingDirection, ref zero1, ref zero2, Game1.player.GetBoundingBox(), 1);
+                        areaOfEffect.Inflate(50, 50);
+                        if (Game1.player.currentLocation.getAllFarmAnimals().Any(animal => animal.GetBoundingBox().Intersects(areaOfEffect))) {
+                            Game1.playSound(CueName("defenseHa"));
+                        }
+                        return;
+                    }
+                }
+                if (Game1.player.ActiveItem is FishingRod or WateringCan) {
+                    return;
+                }
+                Game1.playSound(CueName("tool"));
+            } else {
+                mutex.ToolMutex = true;
+            }
+            if (Game1.player.currentLocation is not Farm farm) {
+                return;
+            }
+            foreach (var animal in farm.getAllFarmAnimals().Where(animal => animal.type.Value.EndsWith("Chicken") && !mutex.CluckMutex.ContainsKey(animal.GetHashCode()))) {
+                Game1.playSound(CueName("cluck"), WeirdSoundsLibrary.Random.Next(-200, 300));
+                mutex.CluckMutex.Add(animal.GetHashCode(), true);
+            }
+        }
+
+        private void ButtonPressedEvent(object? sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        {
+            if (!Context.IsWorldReady) {
+                return;
+            }
+
+            if (e.Button != SButton.F5) {
+                return;
+            }
+            mutex.DisableMod = mutex.DisableMod ? !EnableMod() : DisableMod();
+        }
     }
 }

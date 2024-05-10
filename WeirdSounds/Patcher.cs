@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Audio;
-using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Objects;
 using StardewValley.Tools;
@@ -13,76 +12,43 @@ namespace WeirdSounds
 {
     internal class Patcher
     {
+        private static Harmony? _harmony;
         internal static void PatchAll(IMod mod)
         {
-            var harmony = new Harmony(mod.ModManifest.UniqueID);
-            harmony.PatchAll();
-            harmony.Patch(
+            _harmony ??= new Harmony(mod.ModManifest.UniqueID);
+            _harmony.Patch(
                 original: AccessTools.Method(typeof(SoundsHelper), nameof(SoundsHelper.PlayLocal)),
                 prefix: new HarmonyMethod(typeof(Patcher), nameof(PlayLocalPrefix))
             );
-            harmony.Patch(
-                original: AccessTools.Method(typeof(FarmAnimal), nameof(FarmAnimal.pet)),
-                prefix: new HarmonyMethod(typeof(Patcher), nameof(PetPrefix))
-            );
-            harmony.Patch(
+            _harmony.Patch(
                 original: AccessTools.Method(typeof(SObject), nameof(SObject.PlaceInMachine)),
                 postfix: new HarmonyMethod(typeof(Patcher), nameof(PlaceInMachinePostfix))
             );
-            harmony.Patch(
+            _harmony.Patch(
                 original: AccessTools.Method(typeof(ClickableComponent), nameof(ClickableComponent.containsPoint), [typeof(int), typeof(int)]),
                 postfix: new HarmonyMethod(typeof(Patcher), nameof(ContainsPointPostfix))
             );        
-            harmony.Patch(
+            _harmony.Patch(
                 original: AccessTools.Method(typeof(GameLocation), nameof(GameLocation.answerDialogueAction)),
                 postfix: new HarmonyMethod(typeof(Patcher), nameof(AnswerDialogueActionPostfix))
             );
         }
 
-        private static bool _rescuedAfterDeath;
+        internal static void UnpatchAll()
+        {
+            _harmony?.UnpatchAll();
+        }
+
         private static string CueName(string key)
         {
             return WeirdSoundsLibrary.GetCueName(key);
         }
-        
+            
         private static bool PlayLocalPrefix(ISoundsHelper __instance, ref string cueName, GameLocation location, Vector2? position, int? pitch, SoundContext context)
         {
             switch (cueName) {
-                case "hammer":
-                case "axchop":
-                case "clubswipe":
-                case "swordswipe":
-                    if (Game1.player.UsingTool) {
-                        __instance.PlayLocal(CueName("tool"), location, position, pitch, context, out _);
-                    }
-                    break;
-                case "woodyHit":
-                    if (Game1.player.UsingTool) {
-                        if (location is MineShaft) {
-                            if (location.resourceClumps.Any(c => (c.parentSheetIndex.Value is 752 or 754 or 756 or 758) && c.shakeTimer > 0)) {
-                                return false;
-                            }
-                        }
-                        __instance.PlayLocal(CueName("tool"), location, position, pitch, context, out _);
-                    }
-                    break;
-                case "daggerswipe":
-                    if (Game1.player.ActiveItem is MeleeWeapon dagger && dagger.type.Value == MeleeWeapon.dagger) {
-                        int[] an = [276, 274, 272, 278];
-                        if (an.Any(p => p == Game1.player.FarmerSprite.currentSingleAnimation)) {
-                            if (MeleeWeapon.daggerHitsLeft == 4) {
-                                __instance.PlayLocal(CueName("daggerSpecial"), location, position, pitch, context, out _);
-                            }
-                        } else {
-                            __instance.PlayLocal(CueName("tool"), location, position, pitch, context, out _);
-                        }
-                    }
-                    break;
                 case "clubSmash":
                     if (Game1.player.ActiveItem is MeleeWeapon club && club.type.Value == MeleeWeapon.club && club.isOnSpecial) {
-                        if (MeleeWeapon.clubCooldown > 5800 || (club.lastUser.professions.Contains(28) && MeleeWeapon.clubCooldown > 2700)) {
-                            __instance.PlayLocal(CueName("clubSmash"), location, position, pitch, context, out _);
-                        }
                         return false;
                     }
                     break;
@@ -103,23 +69,6 @@ namespace WeirdSounds
                         __instance.PlayLocal(CueName("trashcan"), location, position, pitch,context, out _);
                     }
                     break;
-                case "batFlap":
-                    var player = Game1.player;
-                    if (player.ActiveItem is MeleeWeapon sword && sword.type.Value == MeleeWeapon.defenseSword) {
-                        int[] an = [252, 243, 259, 234];
-                        if (an.Any(p => p == player.FarmerSprite.currentSingleAnimation)) { 
-                            __instance.PlayLocal(CueName("defense"), location, position, pitch, context, out _);
-                            var toolLocation = player.GetToolLocation();
-                            var zero1 = Vector2.Zero;
-                            var zero2 = Vector2.Zero;
-                            var areaOfEffect = sword.getAreaOfEffect((int)toolLocation.X, (int)toolLocation.Y, player.FacingDirection, ref zero1, ref zero2, player.GetBoundingBox(), 1);
-                            areaOfEffect.Inflate(50, 50);
-                            if (player.currentLocation.getAllFarmAnimals().Any(animal => animal.GetBoundingBox().Intersects(areaOfEffect))) {
-                                __instance.PlayLocal(CueName("defenseHa"), location, position, pitch, context, out _);
-                            }
-                        }
-                    }
-                    break;
                 case "death":
                     if (Game1.player.health <= 0) {
                         __instance.PlayLocal(CueName("death"), location, position, pitch, context, out _);
@@ -127,7 +76,7 @@ namespace WeirdSounds
                     break;
                 case "breathout":
                     if (Game1.player.health == 10 && Game1.player.Sprite.currentFrame == 5) {
-                        _rescuedAfterDeath = true;
+                        mutex.DeathMutex = true;
                     }
                     break;
                 case "bigDeSelect":
@@ -146,23 +95,14 @@ namespace WeirdSounds
             }
             return true;
         }
-        
-        private static bool PetPrefix(FarmAnimal __instance, bool is_auto_pet)
-        {
-            if (is_auto_pet || !__instance.type.Value.EndsWith("Chicken") || __instance.wasPet.Value || Game1.options.muteAnimalSounds || (Game1.timeOfDay >= 1900 && !__instance.isMoving())) {
-                return true;
-            }
-            Game1.playSound(CueName("cluck"), WeirdSoundsLibrary.Random.Next(-200, 300));
-            return true;
-        }
-        
+            
         private static void PlaceInMachinePostfix(SObject __instance, ref bool __result, bool probe)
         {
             if (__result && !probe) {
                 __instance.Location.playSound(CueName("machine"), __instance.TileLocation);
             }
         }
-        
+            
         private static void ContainsPointPostfix(ClickableComponent __instance, ref bool __result)
         {
             if (!__result || __instance is not ClickableTextureComponent ok || !Game1.didPlayerJustLeftClick()) {
@@ -174,14 +114,14 @@ namespace WeirdSounds
             if (ok.sourceRect is not { Left: 128, Top: 256, Height: 64, Width: 64 }){
                 return;
             }
-            if (_rescuedAfterDeath) {
+            if (mutex.DeathMutex) {
                 Game1.playSound(CueName("back2fight"));
-                _rescuedAfterDeath = false;
+                mutex.DeathMutex = false;
             } else {
                 Game1.playSound(CueName("ok"));
             }
         } 
-        
+            
         private static void AnswerDialogueActionPostfix(string questionAndAnswer)
         {
             switch (questionAndAnswer) {
