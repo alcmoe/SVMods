@@ -60,8 +60,7 @@ namespace WeirdSounds
             }
             switch (LibraryTimerDelay[key]) {
                 case > -1: {
-                    var currentTimestamp = (long)(DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds;
-                    if (currentTimestamp - LibraryTimer[key] > LibraryTimerDelay[key]) {
+                    if (Game1.gameModeTicks - LibraryTimer[key] > LibraryTimerDelay[key] * 60) {
                         LibraryIndex[key] = 0;
                     } else {
                         if (LibraryIndex[key] + 1 >= Library[key].Count) {
@@ -70,7 +69,7 @@ namespace WeirdSounds
                             LibraryIndex[key]++;
                         }
                     }
-                    LibraryTimer[key] = currentTimestamp;
+                    LibraryTimer[key] = Game1.gameModeTicks;
                     break;
                 }
                 case -1 when LibraryIndex[key] + 1 >= Library[key].Count:

@@ -76,7 +76,7 @@ namespace WeirdSounds
                     break;
                 case "breathout":
                     if (Game1.player.health == 10 && Game1.player.Sprite.currentFrame == 5) {
-                        mutex.DeathMutex = true;
+                        Mutex.DeathMutex = true;
                     }
                     break;
                 case "bigDeSelect":
@@ -114,9 +114,9 @@ namespace WeirdSounds
             if (ok.sourceRect is not { Left: 128, Top: 256, Height: 64, Width: 64 }){
                 return;
             }
-            if (mutex.DeathMutex) {
+            if (Mutex.DeathMutex) {
                 Game1.playSound(CueName("back2fight"));
-                mutex.DeathMutex = false;
+                Mutex.DeathMutex = false;
             } else {
                 Game1.playSound(CueName("ok"));
             }

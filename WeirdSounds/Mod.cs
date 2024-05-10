@@ -6,6 +6,7 @@ internal partial class Mod: StardewModdingAPI.Mod
 {
     public override void Entry(IModHelper helper)
     {
+        EnableMod();
         WeirdSoundsLibrary.Load(this);
         Helper.Events.Input.ButtonPressed += ButtonPressedEvent;
     }
@@ -13,6 +14,7 @@ internal partial class Mod: StardewModdingAPI.Mod
     private bool EnableMod()
     {
         Patcher.PatchAll(this);
+        Helper.Events.Input.ButtonPressed += ButtonPressedMutedEvent;
         Helper.Events.Player.Warped += WarpedEvent;
         Helper.Events.Display.MenuChanged += MenuChangedEvent;
         Helper.Events.GameLoop.DayStarted += DayStartedEvent;
@@ -25,6 +27,7 @@ internal partial class Mod: StardewModdingAPI.Mod
     private bool DisableMod()
     {
         Patcher.UnpatchAll();
+        Helper.Events.Input.ButtonPressed -= ButtonPressedMutedEvent;
         Helper.Events.Player.Warped -= WarpedEvent;
         Helper.Events.Display.MenuChanged -= MenuChangedEvent;
         Helper.Events.GameLoop.DayStarted -= DayStartedEvent;
@@ -35,13 +38,15 @@ internal partial class Mod: StardewModdingAPI.Mod
     }
 }
 
-internal struct mutex
+internal struct Mutex
 {
     internal static bool DisableMod;
 
     internal static bool ToolMutex;
         
     internal static bool DeathMutex;
+    
+    internal static int WeaponMutex;
 
     internal static readonly Dictionary<int, bool> CluckMutex = [];
         

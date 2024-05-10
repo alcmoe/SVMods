@@ -63,7 +63,7 @@ namespace WeirdSounds
             
         private static void DayStartedEvent(object? sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
-            mutex.DailyClearCache();
+            Mutex.DailyClearCache();
             if (Game1.dayTimeMoneyBox.moneyDial.previousTargetValue - Game1.dayTimeMoneyBox.moneyDial.currentValue >= 1000000) {
                 DelayedAction.playSoundAfterDelay(CueName("million"), 1500);
             }
@@ -80,11 +80,11 @@ namespace WeirdSounds
             }
             if (Game1.player.currentLocation is MineShaft { locationContextId: "Desert" } ms) {
                 foreach (var npc in ms.characters) {
-                    if (npc is not Serpent s || !s.withinPlayerThreshold() || mutex.SerpentBarkDictionary.ContainsKey(s.GetHashCode()) || !Game1.viewport.Contains(new xTile.Dimensions.Location((int)s.Position.X, (int)s.Position.Y))) {
+                    if (npc is not Serpent s || !s.withinPlayerThreshold() || Mutex.SerpentBarkDictionary.ContainsKey(s.GetHashCode()) || !Game1.viewport.Contains(new xTile.Dimensions.Location((int)s.Position.X, (int)s.Position.Y))) {
                         continue;
                     }
                     Game1.playSound(CueName("IAmComing"));
-                    mutex.SerpentBarkDictionary.Add(s.GetHashCode(), true);
+                    Mutex.SerpentBarkDictionary.Add(s.GetHashCode(), true);
                 }
             }
             if (Game1.player.currentLocation is not (Farm or FarmHouse)) {
@@ -94,19 +94,19 @@ namespace WeirdSounds
                 if (npc is not Pet pet) {
                     continue;
                 }
-                if (!mutex.CatFlopDictionary.ContainsKey(pet.GetHashCode())) {
-                    mutex.CatFlopDictionary.Add(pet.GetHashCode(), true);
+                if (!Mutex.CatFlopDictionary.ContainsKey(pet.GetHashCode())) {
+                    Mutex.CatFlopDictionary.Add(pet.GetHashCode(), true);
                 }
                 if (pet.CurrentBehavior == "Flop") {
-                    if (!mutex.CatFlopDictionary[pet.GetHashCode()]) {
+                    if (!Mutex.CatFlopDictionary[pet.GetHashCode()]) {
                         continue;
                     }
                     if (Vector2.Distance(pet.Position, Game1.player.Position) < 16 * 6) {
                         Game1.playSound(CueName("sleep"));
                     }
-                    mutex.CatFlopDictionary[pet.GetHashCode()] = false;
+                    Mutex.CatFlopDictionary[pet.GetHashCode()] = false;
                 } else {
-                    mutex.CatFlopDictionary[pet.GetHashCode()] = true;
+                    Mutex.CatFlopDictionary[pet.GetHashCode()] = true;
                 }
             }
         }       
@@ -124,33 +124,16 @@ namespace WeirdSounds
                 return;
             }
             if (Game1.player.UsingTool) {
-                if (!mutex.ToolMutex) {
+                if (Game1.player.ActiveItem is MeleeWeapon w && w.type.Value is MeleeWeapon.defenseSword or MeleeWeapon.dagger) {
                     return;
                 }
-                mutex.ToolMutex = false;
-                if (Game1.player.ActiveItem is MeleeWeapon dagger && dagger.type.Value == MeleeWeapon.dagger) {
-                    if (dagger.isOnSpecial) {
-                        Game1.playSound(CueName("daggerSpecial"));
-                        return;
-                    }
+                if (!Mutex.ToolMutex) {
+                    return;
                 }
+                Mutex.ToolMutex = false;
                 if (Game1.player.ActiveItem is MeleeWeapon club && club.type.Value == MeleeWeapon.club) {
                     if (club.isOnSpecial) {
                         Game1.playSound(CueName("clubSmash"));
-                        return;
-                    }
-                }
-                if (Game1.player.ActiveItem is MeleeWeapon sword && sword.type.Value == MeleeWeapon.defenseSword) {
-                    if (sword.isOnSpecial) {
-                        Game1.playSound(CueName("defense"));
-                        var toolLocation = Game1.player.GetToolLocation();
-                        var zero1 = Vector2.Zero;
-                        var zero2 = Vector2.Zero;
-                        var areaOfEffect = sword.getAreaOfEffect((int)toolLocation.X, (int)toolLocation.Y, Game1.player.FacingDirection, ref zero1, ref zero2, Game1.player.GetBoundingBox(), 1);
-                        areaOfEffect.Inflate(50, 50);
-                        if (Game1.player.currentLocation.getAllFarmAnimals().Any(animal => animal.GetBoundingBox().Intersects(areaOfEffect))) {
-                            Game1.playSound(CueName("defenseHa"));
-                        }
                         return;
                     }
                 }
@@ -159,14 +142,14 @@ namespace WeirdSounds
                 }
                 Game1.playSound(CueName("tool"));
             } else {
-                mutex.ToolMutex = true;
+                Mutex.ToolMutex = true;
             }
             if (Game1.player.currentLocation is not Farm farm) {
                 return;
             }
-            foreach (var animal in farm.getAllFarmAnimals().Where(animal => animal.type.Value.EndsWith("Chicken") && !mutex.CluckMutex.ContainsKey(animal.GetHashCode()))) {
+            foreach (var animal in farm.getAllFarmAnimals().Where(animal => animal.type.Value.EndsWith("Chicken") && animal.wasPet.Value && !Mutex.CluckMutex.ContainsKey(animal.GetHashCode()))) {
                 Game1.playSound(CueName("cluck"), WeirdSoundsLibrary.Random.Next(-200, 300));
-                mutex.CluckMutex.Add(animal.GetHashCode(), true);
+                Mutex.CluckMutex.Add(animal.GetHashCode(), true);
             }
         }
 
@@ -175,11 +158,57 @@ namespace WeirdSounds
             if (!Context.IsWorldReady) {
                 return;
             }
-
             if (e.Button != SButton.F5) {
                 return;
             }
-            mutex.DisableMod = mutex.DisableMod ? !EnableMod() : DisableMod();
+            Mutex.DisableMod = Mutex.DisableMod ? !EnableMod() : DisableMod();
+        }        
+        
+        private static void ButtonPressedMutedEvent(object? sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        {
+            if (!Context.IsWorldReady) {
+                return;
+            }
+            if (Game1.activeClickableMenu is not null) {
+                return;
+            }
+            if (Mutex.WeaponMutex + 7 > Game1.gameModeTicks) {
+                return;
+            }
+            if (e.Button is SButton.MouseLeft or SButton.MouseRight) {
+                DelayedAction.functionAfterDelay(DaggerAndSwordAction, 30);
+            }
+        }
+
+        private static void DaggerAndSwordAction()
+        {
+            if (!Game1.player.UsingTool) {
+                return;
+            }
+            if (Game1.player.ActiveItem is not MeleeWeapon weapon) {
+                return;
+            }
+            switch (weapon.type.Value) {
+                case MeleeWeapon.dagger when weapon.isOnSpecial:
+                    Game1.playSound(CueName("daggerSpecial"));
+                    return;
+                case MeleeWeapon.defenseSword when weapon.isOnSpecial:
+                    Game1.playSound(CueName("defense"));
+                    var toolLocation = Game1.player.GetToolLocation();
+                    var zero1 = Vector2.Zero;
+                    var zero2 = Vector2.Zero;
+                    var areaOfEffect = weapon.getAreaOfEffect((int)toolLocation.X, (int)toolLocation.Y, Game1.player.FacingDirection, ref zero1, ref zero2, Game1.player.GetBoundingBox(), 1);
+                    areaOfEffect.Inflate(50, 50);
+                    if (Game1.player.currentLocation.getAllFarmAnimals().Any(animal => animal.GetBoundingBox().Intersects(areaOfEffect))) {
+                        Game1.playSound(CueName("defenseHa"));
+                    }
+                    return;
+                case MeleeWeapon.dagger:
+                case MeleeWeapon.defenseSword:
+                    Game1.playSound(CueName("tool"));
+                    break;
+            }
+            Mutex.WeaponMutex = Game1.gameModeTicks;
         }
     }
 }
