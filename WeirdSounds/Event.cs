@@ -123,31 +123,59 @@ namespace WeirdSounds
             if (!Context.IsWorldReady) {
                 return;
             }
-            if (Game1.player.UsingTool) {
-                if (Game1.player.ActiveItem is MeleeWeapon w && w.type.Value is MeleeWeapon.defenseSword or MeleeWeapon.dagger) {
-                    return;
-                }
-                if (!Mutex.ToolMutex) {
-                    return;
-                }
-                Mutex.ToolMutex = false;
-                if (Game1.player.ActiveItem is MeleeWeapon club && club.type.Value == MeleeWeapon.club) {
-                    if (club.isOnSpecial) {
-                        Game1.playSound(CueName("clubSmash"));
+            if (Game1.player.ActiveItem is MeleeWeapon weapon) {
+                if (Mutex.WeaponAnimate.Any(i => i == Game1.player.FarmerSprite.currentSingleAnimation) && Game1.player.FarmerSprite.currentAnimationIndex < 1) {
+                    if (!Mutex.WeaponMutex) {
                         return;
                     }
+                    switch (weapon.type.Value) {
+                        case MeleeWeapon.dagger when weapon.isOnSpecial:
+                            if (MeleeWeapon.daggerHitsLeft == 3) {
+                                Game1.playSound(CueName("daggerSpecial"));
+                            }
+                            break;
+                        case MeleeWeapon.defenseSword when weapon.isOnSpecial:
+                            Game1.playSound(CueName("defense"));
+                            var toolLocation = Game1.player.GetToolLocation();
+                            var zero1 = Vector2.Zero;
+                            var zero2 = Vector2.Zero;
+                            var areaOfEffect = weapon.getAreaOfEffect((int)toolLocation.X, (int)toolLocation.Y, Game1.player.FacingDirection, ref zero1, ref zero2, Game1.player.GetBoundingBox(), 1);
+                            areaOfEffect.Inflate(50, 50);
+                            if (Game1.player.currentLocation.getAllFarmAnimals().Any(animal => animal.GetBoundingBox().Intersects(areaOfEffect))) {
+                                Game1.playSound(CueName("defenseHa"));
+                            }
+                            break;
+                        case MeleeWeapon.club when weapon.isOnSpecial:
+                            Game1.playSound(CueName("clubSmash"));
+                            return;
+                        case MeleeWeapon.club:
+                        case MeleeWeapon.dagger:
+                        case MeleeWeapon.defenseSword:
+                            Game1.playSound(CueName("tool"));
+                            break;
+                    }
+                    Mutex.WeaponMutex = false;
+                } else {
+                    Mutex.WeaponMutex = true;
                 }
-                if (Game1.player.ActiveItem is FishingRod or WateringCan) {
-                    return;
-                }
-                Game1.playSound(CueName("tool"));
             } else {
-                Mutex.ToolMutex = true;
+                if (Game1.player.UsingTool) {
+                    if (!Mutex.ToolMutex) {
+                        return;
+                    }
+                    Mutex.ToolMutex = false;
+                    if (Game1.player.ActiveItem is FishingRod or WateringCan) {
+                        return;
+                    }
+                    Game1.playSound(CueName("tool"));
+                } else {
+                    Mutex.ToolMutex = true;
+                }
             }
-            if (Game1.player.currentLocation is not Farm farm) {
+            if (Game1.player.currentLocation is not Farm && Game1.player.currentLocation is not AnimalHouse) {
                 return;
             }
-            foreach (var animal in farm.getAllFarmAnimals().Where(animal => animal.type.Value.EndsWith("Chicken") && animal.wasPet.Value && !Mutex.CluckMutex.ContainsKey(animal.GetHashCode()))) {
+            foreach (var animal in Game1.player.currentLocation.getAllFarmAnimals().Where(animal => animal.type.Value.EndsWith("Chicken") && animal.wasPet.Value && !Mutex.CluckMutex.ContainsKey(animal.GetHashCode()))) {
                 Game1.playSound(CueName("cluck"), WeirdSoundsLibrary.Random.Next(-200, 300));
                 Mutex.CluckMutex.Add(animal.GetHashCode(), true);
             }
@@ -163,52 +191,5 @@ namespace WeirdSounds
             }
             Mutex.DisableMod = Mutex.DisableMod ? !EnableMod() : DisableMod();
         }        
-        
-        private static void ButtonPressedMutedEvent(object? sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
-        {
-            if (!Context.IsWorldReady) {
-                return;
-            }
-            if (Game1.activeClickableMenu is not null) {
-                return;
-            }
-            if (Mutex.WeaponMutex + 7 > Game1.gameModeTicks) {
-                return;
-            }
-            if (e.Button is SButton.MouseLeft or SButton.MouseRight) {
-                DelayedAction.functionAfterDelay(DaggerAndSwordAction, 30);
-            }
-        }
-
-        private static void DaggerAndSwordAction()
-        {
-            if (!Game1.player.UsingTool) {
-                return;
-            }
-            if (Game1.player.ActiveItem is not MeleeWeapon weapon) {
-                return;
-            }
-            switch (weapon.type.Value) {
-                case MeleeWeapon.dagger when weapon.isOnSpecial:
-                    Game1.playSound(CueName("daggerSpecial"));
-                    return;
-                case MeleeWeapon.defenseSword when weapon.isOnSpecial:
-                    Game1.playSound(CueName("defense"));
-                    var toolLocation = Game1.player.GetToolLocation();
-                    var zero1 = Vector2.Zero;
-                    var zero2 = Vector2.Zero;
-                    var areaOfEffect = weapon.getAreaOfEffect((int)toolLocation.X, (int)toolLocation.Y, Game1.player.FacingDirection, ref zero1, ref zero2, Game1.player.GetBoundingBox(), 1);
-                    areaOfEffect.Inflate(50, 50);
-                    if (Game1.player.currentLocation.getAllFarmAnimals().Any(animal => animal.GetBoundingBox().Intersects(areaOfEffect))) {
-                        Game1.playSound(CueName("defenseHa"));
-                    }
-                    return;
-                case MeleeWeapon.dagger:
-                case MeleeWeapon.defenseSword:
-                    Game1.playSound(CueName("tool"));
-                    break;
-            }
-            Mutex.WeaponMutex = Game1.gameModeTicks;
-        }
     }
 }

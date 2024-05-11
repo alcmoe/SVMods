@@ -14,7 +14,6 @@ internal partial class Mod: StardewModdingAPI.Mod
     private bool EnableMod()
     {
         Patcher.PatchAll(this);
-        Helper.Events.Input.ButtonPressed += ButtonPressedMutedEvent;
         Helper.Events.Player.Warped += WarpedEvent;
         Helper.Events.Display.MenuChanged += MenuChangedEvent;
         Helper.Events.GameLoop.DayStarted += DayStartedEvent;
@@ -27,7 +26,6 @@ internal partial class Mod: StardewModdingAPI.Mod
     private bool DisableMod()
     {
         Patcher.UnpatchAll();
-        Helper.Events.Input.ButtonPressed -= ButtonPressedMutedEvent;
         Helper.Events.Player.Warped -= WarpedEvent;
         Helper.Events.Display.MenuChanged -= MenuChangedEvent;
         Helper.Events.GameLoop.DayStarted -= DayStartedEvent;
@@ -46,8 +44,10 @@ internal struct Mutex
         
     internal static bool DeathMutex;
     
-    internal static int WeaponMutex;
+    internal static bool WeaponMutex;
 
+    internal static readonly int[] WeaponAnimate = [256, 232, 240, 248, 278, 272, 274, 276, 259, 234, 243, 252, 184, 160, 168, 176];
+    
     internal static readonly Dictionary<int, bool> CluckMutex = [];
         
     internal static readonly Dictionary<int, bool> CatFlopDictionary = [];
