@@ -1,7 +1,7 @@
 {
   "Name": "WeirdSounds",
   "Author": "mori_sensei",
-  "Version": "1.0.2",
+  "Version": "1.0.3",
   "Description": "What happened to this game?",
   "UniqueID": "mori_sensei.WeirdSounds",
   "EntryDll": "WeirdSounds.dll",
