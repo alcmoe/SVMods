@@ -36,9 +36,9 @@ namespace WeirdSounds
         private static void MenuChangedEvent(object? sender, StardewModdingAPI.Events.MenuChangedEventArgs e)
         {
             switch (e.NewMenu) {
-                case GameMenu or ItemGrabMenu or JunimoNoteMenu when e.OldMenu?.GetType() != e.NewMenu.GetType():
-                    Game1.playSound(CueName("inventory"));
-                    return;
+                // case GameMenu or ItemGrabMenu or JunimoNoteMenu when e.OldMenu?.GetType() != e.NewMenu.GetType():
+                    // Game1.playSound(CueName("inventory"));
+                    // return;
                 case BobberBar { treasure: true } bBar:
                     DelayedAction.playSoundAfterDelay(CueName("treasureBox"), (int) bBar.treasureAppearTimer);
                     return;
