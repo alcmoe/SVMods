@@ -1,0 +1,9 @@
+{
+  "Name": "Don't starve",
+  "Author": "mori_sensei",
+  "Version": "1.1.0",
+  "Description": "Define adventure by death",
+  "UniqueID": "mori_sensei.DontStarve.Code",
+  "EntryDll": "DontStarve.dll",
+  "UpdateKeys": [ "Nexus:???" ]
+}

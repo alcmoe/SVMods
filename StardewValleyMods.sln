@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HopperPlus", "HopperPlus\Ho
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeirdSounds", "WeirdSounds\WeirdSounds.csproj", "{37F7B133-122D-4485-907D-4C2CA0D605A0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DontStarve", "DontStarve\DontStarve.csproj", "{20E5FD0D-B778-41D4-BC1B-F6D9FA7AE419}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{37F7B133-122D-4485-907D-4C2CA0D605A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37F7B133-122D-4485-907D-4C2CA0D605A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37F7B133-122D-4485-907D-4C2CA0D605A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20E5FD0D-B778-41D4-BC1B-F6D9FA7AE419}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20E5FD0D-B778-41D4-BC1B-F6D9FA7AE419}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20E5FD0D-B778-41D4-BC1B-F6D9FA7AE419}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20E5FD0D-B778-41D4-BC1B-F6D9FA7AE419}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
