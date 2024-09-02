@@ -15,6 +15,7 @@ namespace DontStarve
         private void GameLaunchedEvent(object? sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
             _config = Helper.ReadConfig<ModConfig>();
+            UpdateModStatus();
             var configMenu = Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
             if (configMenu is null)
                 return;
@@ -42,11 +43,7 @@ namespace DontStarve
                 Helper.Multiplayer.SendMessage(_config, ToggleStatus, modIDs: [ModManifest.UniqueID]);
                 Game1.chatBox.addMessage(Helper.Translation.Get("config.BroadcastConfigToAllPlayers"), Color.Blue);
             }
-            if (_config.EnableMod) {
-                EnableMod();
-            } else {
-                DisableMod();
-            }
+            UpdateModStatus();
             Helper.WriteConfig(_config);
         }
 
@@ -58,11 +55,7 @@ namespace DontStarve
                 }
             }
             _config = new ModConfig();
-            if (_config.EnableMod) {
-                EnableMod();
-            } else {
-                DisableMod();
-            }
+            UpdateModStatus();
         }
     }
 

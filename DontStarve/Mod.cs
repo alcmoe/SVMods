@@ -13,10 +13,8 @@ internal partial class Mod: StardewModdingAPI.Mod
     public override void Entry(IModHelper helper)
     {
         Helper.Events.Multiplayer.ModMessageReceived += ModMessageReceivedEvent;
-        Helper.Events.GameLoop.GameLaunched += GameLaunchedEvent;
-        // if (_config.EnableMod) {
-        //     EnableMod();
-        // }
+        Helper.Events.GameLoop.GameLaunched += GameLaunchedEvent;        
+        Helper.Events.GameLoop.SaveLoaded += SaveLoadedEvent;
     }
 
     private void EnableMod()
@@ -39,5 +37,14 @@ internal partial class Mod: StardewModdingAPI.Mod
         Helper.Events.GameLoop.OneSecondUpdateTicking -= OneSecondUpdateTickingForBuffEvent;
         Helper.Events.GameLoop.OneSecondUpdateTicking -= OneSecondUpdateTickingEvent;
         _enabled = false;
+    }
+
+    private void UpdateModStatus()
+    {
+        if (_config.EnableMod) {
+            EnableMod();
+        } else {
+            DisableMod();  
+        }
     }
 }

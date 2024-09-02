@@ -1,9 +1,15 @@
 {
-  "Name": "Don't starve",
+  "Name": "Don't Starve Extra",
   "Author": "mori_sensei",
   "Version": "1.1.0",
   "Description": "Define adventure by death",
   "UniqueID": "mori_sensei.DontStarve.Code",
   "EntryDll": "DontStarve.dll",
-  "UpdateKeys": [ "Nexus:???" ]
+  "UpdateKeys": [ "Nexus:???" ],
+  "Dependencies": [
+    {
+      "UniqueID": "spacechase0.GenericModConfigMenu",
+      "IsRequired": false
+    }
+  ]
 }
