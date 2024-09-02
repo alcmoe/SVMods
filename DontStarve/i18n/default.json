@@ -1,3 +1,6 @@
 {
-  "popup.cancel_sleep_before_2200": "十点之前不能睡觉"
+  "popup.CancelSleepBefore2200": "I can not sleep before 10PM.",
+  "config.EnableMod": "Enable Don't Starve mod effect?",
+  "config.CannotEditConfigAsAClientPlayer": "I can not edit config  as a client player.",
+  "config.BroadcastConfigToAllPlayers": "broadcasting config to all players."
 }

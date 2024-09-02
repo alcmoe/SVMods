@@ -1,0 +1,6 @@
+{
+  "popup.CancelSleepBefore2200": "晚上十点前我不能睡觉。",
+  "config.EnableMod": "开启饥荒特殊效果？",
+  "config.CannotEditConfigAsAClientPlayer": "只有房主才能修改配置。",
+  "config.BroadcastConfigToAllPlayers": "正在广播配置文件。"
+}

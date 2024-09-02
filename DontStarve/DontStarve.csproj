@@ -8,6 +8,7 @@
         <Nullable>enable</Nullable>
         <Version>1.1.0</Version>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

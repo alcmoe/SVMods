@@ -6,6 +6,7 @@ internal partial class Mod: StardewModdingAPI.Mod
 {
     public override void Entry(IModHelper helper)
     {
+        //sdsd
         EnableMod();
         WeirdSoundsLibrary.Load(this);
         Helper.Events.Input.ButtonPressed += ButtonPressedEvent;
