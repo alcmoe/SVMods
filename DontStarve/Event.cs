@@ -31,15 +31,21 @@ namespace DontStarve
                 return;
             }
             var player = Game1.player;
+            var mod = player.isInBed.Value ? 360 : 240;
             if (player.stamina > 0f) {
-                if (e.IsMultipleOf(240)) {
-                    player.stamina -= 1f;
+                if (e.IsMultipleOf((uint)mod)) {
+                    --player.stamina;
                 }
             }
             if (player is { stamina: <= 0f, health: > 0 }) {
                 if (e.IsMultipleOf(120)) {
-                    player.health -= 1;
+                    --player.health;
                 }
+            }
+
+            if (player.isInBed.Value && e.IsMultipleOf(60) && player.stamina > 11 && player.health < player.maxHealth) {
+                player.stamina -= 2f;
+                ++player.health;
             }
         }
     }
