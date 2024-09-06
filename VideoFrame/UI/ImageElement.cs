@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace VideoFrame.Frame;
+namespace VideoFrame.UI;
 
 public class ImageElement : UiElement
 {

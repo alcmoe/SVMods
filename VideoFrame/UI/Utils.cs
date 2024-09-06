@@ -1,11 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace VideoFrame.Frame;
+namespace VideoFrame.UI;
 
-public class Utils
+public static class Utils
 {
-    public static void DrawBox(SpriteBatch batch, Texture2D texture, Rectangle sourceRect, Rectangle bounds,
+    public static void DrawBox(SpriteBatch batch, Texture2D? texture, Rectangle sourceRect, Rectangle bounds,
         int topEdgeHeight = 16, int leftEdgeWidth = 12, int rightEdgeWidth = 16, int bottomEdgeHeight = 12)
     {
         DrawBox(
@@ -23,60 +23,60 @@ public class Utils
         );
     }
 
-    public static void DrawBox(SpriteBatch batch, Texture2D texture, Rectangle sourceRect, int xPos, int yPos,
+    private static void DrawBox(SpriteBatch batch, Texture2D? texture, Rectangle sourceRect, int xPos, int yPos,
         int width,
         int height, int topEdgeHeight = 16, int leftEdgeWidth = 12, int rightEdgeWidth = 16, int bottomEdgeHeight = 12)
     {
-        int topEdgeWidth = (width - (leftEdgeWidth + rightEdgeWidth));
-        int leftEdgeHeight = height - (topEdgeHeight + bottomEdgeHeight);
+        var topEdgeWidth = width - (leftEdgeWidth + rightEdgeWidth);
+        var leftEdgeHeight = height - (topEdgeHeight + bottomEdgeHeight);
         // We don't need a bottomEdgeWidth or a rightEdgeHeight, because we're not doing bloody trapezoids.
 
         // Get our corner destination rects...
-        Rectangle topLeftCorner = new Rectangle(
+        var topLeftCorner = new Rectangle(
             xPos,
             yPos,
             leftEdgeWidth,
             topEdgeHeight);
-        Rectangle topRightCorner = new Rectangle(
+        var topRightCorner = new Rectangle(
             xPos + width - rightEdgeWidth,
             yPos,
             rightEdgeWidth,
             topEdgeHeight);
-        Rectangle bottomLeftCorner = new Rectangle(
+        var bottomLeftCorner = new Rectangle(
             xPos,
             yPos + leftEdgeHeight + topEdgeHeight,
             leftEdgeWidth,
             bottomEdgeHeight);
-        Rectangle bottomRightCorner = new Rectangle(
+        var bottomRightCorner = new Rectangle(
             xPos + leftEdgeWidth + topEdgeWidth,
             yPos + topEdgeHeight + leftEdgeHeight,
             rightEdgeWidth,
             bottomEdgeHeight);
 
         // ...and our edge destination rects.
-        Rectangle topEdge = new Rectangle(
+        var topEdge = new Rectangle(
             xPos + leftEdgeWidth,
             yPos,
             topEdgeWidth,
             topEdgeHeight);
-        Rectangle leftEdge = new Rectangle(
+        var leftEdge = new Rectangle(
             xPos,
             yPos + topEdgeHeight,
             leftEdgeWidth,
             leftEdgeHeight);
-        Rectangle rightEdge = new Rectangle(
+        var rightEdge = new Rectangle(
             xPos + leftEdgeWidth + topEdgeWidth,
             yPos + topEdgeHeight,
             rightEdgeWidth,
             leftEdgeHeight);
-        Rectangle bottomEdge = new Rectangle(
+        var bottomEdge = new Rectangle(
             xPos + leftEdgeWidth,
             yPos + height - bottomEdgeHeight,
             topEdgeWidth,
             bottomEdgeHeight);
 
         // Finally, our centre destination rect.
-        Rectangle centreRect = new Rectangle(
+        var centreRect = new Rectangle(
             xPos + leftEdgeWidth,
             yPos + topEdgeHeight,
             width - (leftEdgeWidth + rightEdgeWidth),

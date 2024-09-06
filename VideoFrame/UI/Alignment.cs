@@ -1,4 +1,4 @@
-﻿namespace VideoFrame.Frame;
+﻿namespace VideoFrame.UI;
 
 public enum Alignment
 {

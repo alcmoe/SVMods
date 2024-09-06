@@ -1,46 +1,42 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace VideoFrame.Frame;
+namespace VideoFrame.UI;
 
 public class ContainerElement : UiElement
 {
-    internal List<UiElement> childElements = new List<UiElement>();
-    internal int containerMargin;
-    internal MenuBase parentMenu;
+    internal readonly List<UiElement> ChildElements = [];
+    internal int ContainerMargin;
+    private MenuBase? _parentMenu;
 
-    public ContainerElement(string name, Rectangle bounds, DrawableType type = DrawableType.SlicedBox, Texture2D? texture = null, Rectangle? sourceRect = null,
+    internal ContainerElement(string name, Rectangle bounds, DrawableType type = DrawableType.SlicedBox, Texture2D? texture = null, Rectangle? sourceRect = null,
         Color? color = null,
         int topEdgeSize = 16, int bottomEdgeSize = 12, int leftEdgeSize = 12, int rightEdgeSize = 16,
         int containerMargin = 4)
         : base(name, bounds, type, texture, sourceRect, color, false,
             topEdgeSize, bottomEdgeSize, leftEdgeSize, rightEdgeSize)
     {
-        this.bounds = bounds;
-        if (color.HasValue)
-            this.textureTint = color.Value;
-        else
-            this.textureTint = Color.White;
+        Bounds = bounds;
+        TextureTint = color ?? Color.White;
 
-        this.containerMargin = containerMargin;
+        ContainerMargin = containerMargin;
     }
 
     internal virtual void AddChild(UiElement child)
     {
-        if (!this.childElements.Contains(child))
+        if (!ChildElements.Contains(child))
         {
-            this.childElements.Add(child);
-            child.parent = this;
+            ChildElements.Add(child);
+            child.Parent = this;
         }
-
-        this.OrganiseChildren();
+        OrganiseChildren();
     }
 
     internal virtual void Draw(SpriteBatch spriteBatch)
     {
         base.Draw(spriteBatch);
 
-        foreach (UiElement child in this.childElements)
+        foreach (UiElement child in ChildElements)
         {
             child.Draw(spriteBatch);
         }
@@ -48,7 +44,7 @@ public class ContainerElement : UiElement
 
     public override void ReceiveLeftClick(int x, int y)
     {
-        foreach (UiElement child in this.childElements)
+        foreach (UiElement child in ChildElements)
         {
             child.ReceiveLeftClick(x, y);
         }
@@ -58,7 +54,7 @@ public class ContainerElement : UiElement
 
     public override void ReceiveRightClick(int x, int y)
     {
-        foreach (UiElement child in this.childElements)
+        foreach (UiElement child in ChildElements)
         {
             child.ReceiveRightClick(x, y);
         }
@@ -68,12 +64,12 @@ public class ContainerElement : UiElement
 
     public void SetParent(MenuBase parent)
     {
-        this.parentMenu = parent;
-        this.OrganiseChildren();
+        _parentMenu = parent;
+        OrganiseChildren();
     }
 
     internal override void OrganiseChildren()
     {
-        this.parentMenu?.UpdateCloseButton(base.TopRightCorner);
+        _parentMenu?.UpdateCloseButton(TopRightCorner);
     }
 }
