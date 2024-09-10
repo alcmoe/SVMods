@@ -10,7 +10,8 @@ public class MenuBase : IClickableMenu
     // Every base menu needs a container, and only a container.
     private readonly ContainerElement _uiContainer;
     private readonly string _menuName;
-    private string _openSound;
+    private readonly string _openSound;
+    private bool _drawUi = true;
 
     public MenuBase(ContainerElement uiContainer, string name, string openSound = "bigSelect")
     {
@@ -25,16 +26,22 @@ public class MenuBase : IClickableMenu
         UpdateCloseButton(_uiContainer.TopRightCorner);
     }
 
+    public void SetDrawUi(bool value)
+    {
+        _drawUi = value;
+    }
+
     public void MenuOpened()
     {
-        // if (!Utilities.Sound.TryPlaySound(this.openSound))
-            // this.logger.Error($"Oops! I failed while trying to play sound cue {this.openSound} in {Game1.currentLocation.Name}. Is it a valid cue?");
+        Utils.TryPlaySound(_openSound);
     }
 
     public override void draw(SpriteBatch b)
     {
         _uiContainer.Draw(b);
-        upperRightCloseButton.draw(b);
+        if (_drawUi) {
+            upperRightCloseButton.draw(b);
+        }
         drawMouse(b);
     }
 

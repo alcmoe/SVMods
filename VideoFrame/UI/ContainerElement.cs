@@ -8,7 +8,8 @@ public class ContainerElement : UiElement
     internal readonly List<UiElement> ChildElements = [];
     internal int ContainerMargin;
     private MenuBase? _parentMenu;
-
+    protected bool DrawUi = true;
+    
     internal ContainerElement(string name, Rectangle bounds, DrawableType type = DrawableType.SlicedBox, Texture2D? texture = null, Rectangle? sourceRect = null,
         Color? color = null,
         int topEdgeSize = 16, int bottomEdgeSize = 12, int leftEdgeSize = 12, int rightEdgeSize = 16,
@@ -61,6 +62,8 @@ public class ContainerElement : UiElement
 
         base.ReceiveRightClick(x, y);
     }
+    
+    
 
     public void SetParent(MenuBase parent)
     {
@@ -68,8 +71,15 @@ public class ContainerElement : UiElement
         OrganiseChildren();
     }
 
+    public void SetDrawUi(bool value)
+    {
+        DrawUi = value;
+        _parentMenu!.SetDrawUi(value);
+    }
+
     internal override void OrganiseChildren()
     {
+        SourceRect = Bounds;
         _parentMenu?.UpdateCloseButton(TopRightCorner);
     }
 }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using StardewModdingAPI.Framework;
+using StardewValley;
 
 namespace VideoFrame.UI;
 
@@ -181,4 +183,22 @@ public static class Utils
                 sourceRect.Height - (topEdgeHeight + bottomEdgeHeight)),
             Color.White);
     }
+    
+    public static void TryPlaySound(string soundCue)
+    {
+        try
+        {
+            Game1.soundBank.GetCue(soundCue);
+        }
+        catch (Exception e) {
+            return;
+        }
+
+        Game1.playSound(soundCue);
+    }
+
+    public static bool TimeIsMultipleOf (uint number){
+        return  Game1.ticks % number == 0U;
+    }
+
 }

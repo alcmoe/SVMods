@@ -10,7 +10,7 @@ public class HBoxElement : ContainerElement
 
     public HBoxElement(string name, Rectangle bounds, DrawableType type = DrawableType.Texture, Texture2D? texture = null, Rectangle? sourceRect = null,
         Color? color = null,
-        int topEdgeSize = 4, int bottomEdgeSize = 4, int leftEdgeSize = 4, int rightEdgeSize = 4, int childSpacing = 4)
+        int topEdgeSize =20, int bottomEdgeSize = 20, int leftEdgeSize = 20, int rightEdgeSize = 20, int childSpacing = 4)
         : base(name, bounds, type, texture, sourceRect, color,
             topEdgeSize, bottomEdgeSize, leftEdgeSize, rightEdgeSize)
     {
@@ -33,8 +33,8 @@ public class HBoxElement : ContainerElement
         var totalWidth = cumulativeChildWidth + LeftEdgeSize + RightEdgeSize - _childSpacing;
         Bounds.Width = totalWidth;
         Bounds.Height = totalHeight;
-        Bounds.Width -= Bounds.Width % 4 * 4;
-        Bounds.Height -= Bounds.Height % 4 * 4;
+        // Bounds.Width -= Bounds.Width % 4 * 4;
+        // Bounds.Height -= Bounds.Height % 4 * 4;
         var centrePosition = Utility.getTopLeftPositionForCenteringOnScreen(Width, Height);
         X = (int)centrePosition.X;
         Y = (int)centrePosition.Y;
@@ -54,5 +54,6 @@ public class HBoxElement : ContainerElement
         {
             child.Bounds.Y = Bounds.Y + Bounds.Height / 2 - child.Bounds.Height / 2;
         }
+        base.OrganiseChildren();
     }
 }

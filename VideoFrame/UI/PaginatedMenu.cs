@@ -8,28 +8,24 @@ public class PaginatedMenu : ContainerElement
 {
     private UiElement? _previousArrow;
     private UiElement? _nextArrow;
-    private readonly List<MenuPage> _pages;
-    private readonly List<ContainerElement> _assembledPages = [];
+    protected readonly List<MenuPage> Pages;
     private readonly Orientation _orientation;
     private readonly Rectangle _upArrowSourceRect = new(76, 72, 40, 44);
     private readonly Rectangle _downArrowSourceRect = new(12, 76, 40, 44);
     private readonly Rectangle _leftArrowSourceRect = new(8, 268, 44, 40);
     private readonly Rectangle _rightArrowSourceRect = new(12, 204, 44, 40);
+    // private readonly Rectangle _playButtonSourceRect = new ()
     private int _currentIndex;
-    private string _pageTurnCueName;
+    private readonly string _pageTurnCueName;
     // private Logger logger;
 
-    private int Index
+    protected int Index
     {
         get => _currentIndex;
         set
         {
-            if (value < 0) {
-                value = 0;
-            }
-            if (value > _pages.Count - 1) {
-                value = _pages.Count;
-            }
+            value = Math.Max(0, value);
+            value = Math.Min(value, Pages.Count - 1);
             _currentIndex = value;
         }
     }
@@ -40,7 +36,7 @@ public class PaginatedMenu : ContainerElement
         Orientation orientation = Orientation.Horizontal) :
         base(name, bounds, type, texture, sourceRect, color, topEdgeSize, bottomEdgeSize, leftEdgeSize, rightEdgeSize)
     {
-        _pages = pages;
+        Pages = pages;
         _orientation = orientation;
         _pageTurnCueName = pageTurnCue;
         SetupPages(_orientation);
@@ -51,9 +47,8 @@ public class PaginatedMenu : ContainerElement
     {
         var widestPage = 0;
         var tallestPage = 0;
-        _assembledPages.Clear();
 
-        foreach (MenuPage page in _pages)
+        foreach (var page in Pages)
         {
             if (widestPage < page.TotalWidth)
                 widestPage = page.TotalWidth;
@@ -69,7 +64,6 @@ public class PaginatedMenu : ContainerElement
                 );
                 horizontalPage.AddChild(page.Page);
                 horizontalPage.AddChild(page.PageText);
-                _assembledPages.Add(horizontalPage);
             }
             else
             {
@@ -79,7 +73,6 @@ public class PaginatedMenu : ContainerElement
                 );
                 verticalPage.AddChild(page.Page);
                 verticalPage.AddChild(page.PageText);
-                _assembledPages.Add(verticalPage);
             }
         }
 
@@ -93,7 +86,7 @@ public class PaginatedMenu : ContainerElement
         Y = (int)centrePosition.Y;
     }
 
-    private void OrganiseUi(Orientation orientation)
+    protected virtual void OrganiseUi(Orientation orientation)
     {
         switch (orientation)
         {
@@ -187,8 +180,7 @@ public class PaginatedMenu : ContainerElement
         
         if (_currentIndex > 0)
         {
-            // if (!Utilities.Sound.TryPlaySound(this.pageTurnCueName))
-                // this.logger.Error($"Oops! I failed while trying to play sound cue {this.pageTurnCueName} in {Game1.currentLocation.Name}. Is it a valid cue?");
+            Utils.TryPlaySound(_pageTurnCueName);
         }
 
         Index--;
@@ -196,10 +188,9 @@ public class PaginatedMenu : ContainerElement
 
     private void NextArrowClicked()
     {
-        if (_currentIndex < _pages.Count - 1)
+        if (_currentIndex < Pages.Count - 1)
         {
-            // if (!Utilities.Sound.TryPlaySound(this.pageTurnCueName))
-                // this.logger.Error($"Oops! I failed while trying to play sound cue {this.pageTurnCueName} in {Game1.currentLocation.Name}. Is it a valid cue?");
+            Utils.TryPlaySound(_pageTurnCueName);
         }
 
         Index++;
@@ -234,12 +225,12 @@ public class PaginatedMenu : ContainerElement
 
     internal override void Draw(SpriteBatch spriteBatch)
     {
-        _previousArrow!.Draw(spriteBatch, _currentIndex == 0 ? Color.DarkGray : Color.White);
-
-        _nextArrow!.Draw(spriteBatch, _currentIndex == _pages.Count - 1 ? Color.DarkGray : Color.White);
-
-        if (_pages.Count >= 1)
-            _pages[_currentIndex].Draw(spriteBatch);
+        if (DrawUi) {
+            _previousArrow!.Draw(spriteBatch, _currentIndex == 0 ? Color.DarkGray : Color.White);
+            _nextArrow!.Draw(spriteBatch, _currentIndex == Pages.Count - 1 ? Color.DarkGray : Color.White);
+        }
+        if (Pages.Count >= 1)
+            Pages[_currentIndex].Draw(spriteBatch);
 
         base.Draw(spriteBatch);
     }

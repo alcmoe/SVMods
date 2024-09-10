@@ -1,0 +1,11 @@
+{
+  "Name": "VideoFrame",
+  "Author": "mori_sensei",
+  "Version": "1.1.0",
+  "Description": "Define adventure by death",
+  "UniqueID": "mori_sensei.VideoFrame.Code",
+  "EntryDll": "VideoFrame.dll",
+  "UpdateKeys": [ "Nexus:???" ],
+  "Dependencies": [
+  ]
+}

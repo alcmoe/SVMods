@@ -18,6 +18,7 @@ public class UiElement
     internal DrawableType DrawableType;
     internal Action? LeftClickCallback;
     internal Action? RightClickCallback;
+    internal Action? PerformHoverCallback;
     internal bool DrawShadow;
 
     public bool DrawBox
@@ -86,7 +87,8 @@ public class UiElement
         if (DrawableType == DrawableType.SlicedBox && Texture == null) {
             // In this situation, we need sane defaults.
             Texture = Game1.menuTexture;
-            SourceRect = new Rectangle(0, 256, 60, 60);
+            // SourceRect = new Rectangle(0, 256, 60, 60);
+            SourceRect = Bounds;
         }
         TextureTint = color ?? Color.White;
         TopEdgeSize = topEdgeSize;
@@ -148,6 +150,11 @@ public class UiElement
     public virtual void ReceiveScrollWheel(int direction)
     {
 
+    }
+    
+    public virtual void PerformHoverAction(int x, int y)
+    {
+        PerformHoverCallback?.Invoke();
     }
 
     public void SetParent(UiElement parent)

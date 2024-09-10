@@ -60,5 +60,6 @@ public class VBoxElement : ContainerElement
         {
             child.Bounds.X = Bounds.X + Bounds.Width / 2 - child.Bounds.Width / 2;
         }
+        base.OrganiseChildren();
     }
 }
